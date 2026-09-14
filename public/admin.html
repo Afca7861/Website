@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel | AFCA Auto Sales Ltd.</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/export.html" data-nav="export">Export / Salvage</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+<section class="container stack-lg" style="padding-top:28px;padding-bottom:60px;">
+  <div id="admin-guard"><p class="muted">Checking admin access…</p></div>
+
+  <div id="admin-app" hidden>
+    <h1>Admin panel</h1>
+    <p class="muted">Post and manage listings for every section of the site. Photos you upload here appear immediately on the live pages.</p>
+
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="local">Local Cars</button>
+      <button type="button" class="admin-tab" data-tab="export">Export / Salvage</button>
+      <button type="button" class="admin-tab" data-tab="parts">Car Parts</button>
+      <button type="button" class="admin-tab" data-tab="auctions">Auction Feed</button>
+    </div>
+
+    <!-- LOCAL CARS -->
+    <div class="admin-panel" data-panel="local">
+      <h2>Local-sale cars</h2>
+      <form class="admin-form" id="form-local">
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-local" src="/assets/placeholder-car.svg" alt="">
+          <div>
+            <label for="image-local">Photo</label>
+            <input type="file" id="image-local" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="image_url">
+          </div>
+        </div>
+        <div><label>Title</label><input name="title" required placeholder="2016 Honda Civic LX"></div>
+        <div><label>Price (CAD)</label><input name="price" type="number" min="0" step="1"></div>
+        <div><label>Year</label><input name="year" type="number" min="1970" max="2100"></div>
+        <div><label>Make</label><input name="make"></div>
+        <div><label>Model</label><input name="model"></div>
+        <div><label>Mileage (km)</label><input name="mileage" type="number" min="0"></div>
+        <div><label>Condition note</label><input name="condition_note" placeholder="Inspected"></div>
+        <div><label>Tags (comma-separated)</label><input name="tags" placeholder="budget,family"></div>
+        <div class="field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+        <div class="field-full" id="msg-local"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="submit-local">Add listing</button>
+          <button class="btn btn-outline" type="button" id="cancel-local" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <h3>Current listings</h3>
+      <div class="admin-table-wrap" id="table-local"></div>
+    </div>
+
+    <!-- EXPORT / SALVAGE -->
+    <div class="admin-panel" data-panel="export" hidden>
+      <h2>Export / salvage vehicles</h2>
+      <form class="admin-form" id="form-export">
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-export" src="/assets/placeholder-car.svg" alt="">
+          <div>
+            <label for="image-export">Photo</label>
+            <input type="file" id="image-export" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="image_url">
+          </div>
+        </div>
+        <div><label>Title</label><input name="title" required placeholder="2013 BMW 3 Series (Salvage Title)"></div>
+        <div><label>Price (CAD)</label><input name="price" type="number" min="0" step="1"></div>
+        <div><label>Year</label><input name="year" type="number" min="1970" max="2100"></div>
+        <div><label>Make</label><input name="make"></div>
+        <div><label>Model</label><input name="model"></div>
+        <div><label>Mileage (km)</label><input name="mileage" type="number" min="0"></div>
+        <div><label>Condition note</label><input name="condition_note" placeholder="Salvage — front-end damage, drivable"></div>
+        <div><label>Tags (comma-separated)</label><input name="tags" placeholder="salvage,export"></div>
+        <div class="field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+        <div class="field-full" id="msg-export"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="submit-export">Add listing</button>
+          <button class="btn btn-outline" type="button" id="cancel-export" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <h3>Current listings</h3>
+      <div class="admin-table-wrap" id="table-export"></div>
+    </div>
+
+    <!-- PARTS -->
+    <div class="admin-panel" data-panel="parts" hidden>
+      <h2>Car parts</h2>
+      <form class="admin-form" id="form-parts">
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-parts" src="/assets/placeholder-part.svg" alt="">
+          <div>
+            <label for="image-parts">Photo</label>
+            <input type="file" id="image-parts" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="image_url">
+          </div>
+        </div>
+        <div><label>Title</label><input name="title" required placeholder="Used Alternator"></div>
+        <div><label>Category</label><input name="category" placeholder="Electrical"></div>
+        <div><label>Compatible make</label><input name="make_compat" placeholder="Honda"></div>
+        <div><label>Compatible model</label><input name="model_compat" placeholder="Civic 2012-2016"></div>
+        <div><label>Condition</label><input name="condition_note" placeholder="Used — tested"></div>
+        <div><label>Price (CAD)</label><input name="price" type="number" min="0" step="1"></div>
+        <div><label>Quantity</label><input name="quantity" type="number" min="0" value="1"></div>
+        <div class="field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+        <div class="field-full" id="msg-parts"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="submit-parts">Add listing</button>
+          <button class="btn btn-outline" type="button" id="cancel-parts" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <h3>Current listings</h3>
+      <div class="admin-table-wrap" id="table-parts"></div>
+    </div>
+
+    <!-- AUCTIONS -->
+    <div class="admin-panel" data-panel="auctions" hidden>
+      <h2>Daily auction feed</h2>
+      <p class="helptext">The auction link is only ever shown to logged-in customers — logged-out visitors see the photo and details but not the link.</p>
+      <form class="admin-form" id="form-auctions">
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-auctions" src="/assets/placeholder-car.svg" alt="">
+          <div>
+            <label for="image-auctions">Photo</label>
+            <input type="file" id="image-auctions" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="image_url">
+          </div>
+        </div>
+        <div><label>Title</label><input name="title" required placeholder="2018 Subaru Outback"></div>
+        <div><label>Year</label><input name="year" type="number" min="1970" max="2100"></div>
+        <div><label>Make</label><input name="make"></div>
+        <div><label>Model</label><input name="model"></div>
+        <div><label>Auction source</label><input name="auction_source" placeholder="IAAI / Copart"></div>
+        <div><label>Closes</label><input name="close_time" placeholder="Daily 5:00 PM PT"></div>
+        <div class="field-full"><label>Auction URL (only shown to logged-in customers)</label><input name="auction_url" type="url" required placeholder="https://..."></div>
+        <div class="field-full" id="msg-auctions"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="submit-auctions">Add listing</button>
+          <button class="btn btn-outline" type="button" id="cancel-auctions" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <h3>Current listings</h3>
+      <div class="admin-table-wrap" id="table-auctions"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+
+</body>
+</html>

@@ -48,8 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
     apiFetch("/api/auth/me")
       .then(({ user }) => {
         if (user) {
+          const adminLink = user.role === "admin" ? `<a class="btn btn-outline" href="/admin.html">Admin</a>` : "";
           authArea.innerHTML =
             `<span class="muted" style="font-size:13px;">Hi, ${escapeHtml(user.name.split(" ")[0])}</span>` +
+            adminLink +
             `<button class="btn btn-outline" id="logout-btn" type="button">Log out</button>`;
           qs("#logout-btn", authArea).addEventListener("click", async () => {
             await apiFetch("/api/auth/logout", { method: "POST" });

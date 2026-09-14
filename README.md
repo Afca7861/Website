@@ -69,14 +69,52 @@ extra step, and thank you for bearing with the sandbox's limitation.
   - The contact form on `/contact.html` shows a success message but doesn't
     actually send anywhere yet — wire it to an email service or CRM
 
+## Admin panel
+
+There's now a real admin UI at **`/admin.html`** (sign in at
+**`/admin-login.html`**) for posting and editing listings in all four
+sections — local cars, export/salvage cars, parts, and the daily auction
+feed — including uploading a photo for each one. No coding or database
+tool required day-to-day.
+
+**Becoming the first admin** (there's no public sign-up for this, on
+purpose):
+
+1. Register a normal customer account on the live site with the email
+   address you want to use as admin.
+2. Set the `ADMIN_BOOTSTRAP_EMAIL` environment variable (in `.env` locally,
+   or in your hosting platform's environment variable settings) to that
+   same email address.
+3. Restart the server. On every startup, if a registered account matches
+   `ADMIN_BOOTSTRAP_EMAIL`, it's granted the `admin` role. It's safe to
+   leave this variable set permanently — it only ever affects that one
+   account.
+4. Log in at `/admin-login.html`. Once you're in, you'll also see a
+   discreet "Admin" button in the header on every page.
+
+You can grant additional admins the same way (set `ADMIN_BOOTSTRAP_EMAIL`
+to each new address in turn and restart), or, faster, once you have one
+admin account, open `data/afca.db` directly and run
+`UPDATE users SET role = 'admin' WHERE email = '...';`.
+
+**Important limitation on Render's (and most) free tiers:** free web
+service plans don't include persistent disk storage, so both the SQLite
+database *and* any photos uploaded through the admin panel live on disk
+that gets wiped on every restart or redeploy. That's fine for testing, but
+before relying on this for real inventory, upgrade to a plan with a
+persistent disk (or move photo storage to something like Cloudinary/S3 —
+ask me and I can wire that in) so uploads and listings actually stick
+around.
+
 ## Getting real inventory into the site
 
 Listings live in a SQLite database (`data/afca.db`, created automatically).
-Three ways to manage them, roughly in order of effort:
+The admin panel above is the easiest way to manage them day-to-day. A few
+other options, roughly in order of effort:
 
-1. **Quickest:** open `data/afca.db` with a SQLite browser (e.g. "DB Browser
-   for SQLite") and edit the `vehicles`, `parts`, and `auctions` tables
-   directly.
+1. **Quickest (no admin panel):** open `data/afca.db` with a SQLite browser
+   (e.g. "DB Browser for SQLite") and edit the `vehicles`, `parts`, and
+   `auctions` tables directly.
 2. **Scriptable:** write a small Node script using the same `better-sqlite3`
    `db` object (see `server/seed.js` for the pattern) that reads from
    whatever spreadsheet or export AFCA already uses.
@@ -96,14 +134,17 @@ server/
     auth.js       /api/auth/register, /login, /logout, /me
     listings.js   /api/vehicles, /api/parts (public, read-only)
     auctions.js   /api/auctions (gates auction_url server-side by login state)
+    admin.js      /api/admin/* — listing CRUD + photo upload, admin-only
 public/
   index.html, cars.html, parts.html, export.html, auctions.html,
   vehicle.html, part.html, register.html, login.html, account.html,
   about.html, contact.html, 404.html
+  admin.html, admin-login.html   Admin panel (see "Admin panel" below)
   css/style.css   Design system implemented as CSS custom properties
   js/             main.js (nav + auth header), carousel.js, listings.js,
-                  auctions.js
+                  auctions.js, admin.js
   assets/         logo.svg + placeholder images
+  uploads/        Photos uploaded through the admin panel (gitignored)
 docs/
   outline.md          Tarrah's sitemap & content plan
   design-system.md    Color palette, typography, layout rules

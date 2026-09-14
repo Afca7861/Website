@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   buyer_type TEXT NOT NULL DEFAULT 'local', -- 'local' | 'trade' | 'overseas'
+  role TEXT NOT NULL DEFAULT 'customer', -- 'customer' | 'admin' — see ADMIN_BOOTSTRAP_EMAIL in README
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

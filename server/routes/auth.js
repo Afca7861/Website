@@ -12,7 +12,7 @@ const insertUser = db.prepare(`
   VALUES (@name, @email, @password_hash, @buyer_type)
 `);
 const findByEmail = db.prepare("SELECT * FROM users WHERE email = ?");
-const findById = db.prepare("SELECT id, name, email, buyer_type, created_at FROM users WHERE id = ?");
+const findById = db.prepare("SELECT id, name, email, buyer_type, role, created_at FROM users WHERE id = ?");
 
 function isValidEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

@@ -33,6 +33,9 @@
 /account (Logged-in user's dashboard — saved auctions, account info)
 /about (About AFCA)
 /contact (Contact / location / hours)
+/admin-login (Staff-only sign in)
+/admin (Staff-only admin panel — post/edit/delete listings in every
+  section, including photo upload; see "Admin panel" in README.md)
 ```
 
 ## 4. Landing page — section by section
@@ -83,9 +86,15 @@ Beneath both sections: a condensed pitch for the other two service lines (parts 
 ### `/contact`
 - Address (13211 King George Blvd, Surrey, BC V3T 2T3), map embed, hours `[TODO]`, phone `[TODO]`, email, contact form
 
+### `/admin-login` and `/admin` — Staff admin panel
+- Separate login for staff accounts (role = `admin` in the `users` table); customers can never self-register into this role.
+- `/admin` has one tab per section — Local Cars, Export/Salvage, Parts, Auction Feed — each with an add/edit form (including a photo upload) and a table of existing listings with edit/delete actions.
+- The first admin account is bootstrapped via the `ADMIN_BOOTSTRAP_EMAIL` environment variable (register normally with that email, then set the variable and restart) — see README.md for the full procedure.
+- Known limitation: on hosting free tiers without persistent disk (e.g. Render's free plan), uploaded photos and the database reset on every redeploy — a persistent disk (or external image storage) is needed before this is used for real, ongoing inventory management.
+
 ## 6. Open items before this can be called final
 
 - [ ] Real phone number
 - [ ] Confirmed hours (Facebook currently just says "Always open," which is likely an unset default rather than accurate)
 - [ ] Twitter/X and Instagram handles
-- [ ] Whether local inventory, parts, and auction listings will be manually entered, or pulled from an existing spreadsheet / the "Daily Cars" Google Drive folder used for the Facebook posting workflow
+- [x] How listings get entered day-to-day — resolved: an admin panel (`/admin`) was built for this, replacing manual database edits as the primary path. The "Daily Cars" Google Drive automation is still an option to connect later if wanted.

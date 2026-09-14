@@ -7,11 +7,12 @@ const express = require("express");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
-require("./db"); // ensures schema exists before anything else runs
+const db = require("./db"); // ensures schema exists before anything else runs
 
 const authRoutes = require("./routes/auth");
 const listingsRoutes = require("./routes/listings");
 const auctionsRoutes = require("./routes/auctions");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,24 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api", listingsRoutes);
 app.use("/api", auctionsRoutes);
+app.use("/api/admin", adminRoutes);
+
+// One-time (safe to leave set) admin bootstrap: if ADMIN_BOOTSTRAP_EMAIL is
+// set and a registered account matches it, grant that account the 'admin'
+// role on every startup. There's no other way to create an admin — see
+// README.md.
+if (process.env.ADMIN_BOOTSTRAP_EMAIL) {
+  const bootstrapEmail = process.env.ADMIN_BOOTSTRAP_EMAIL.toLowerCase().trim();
+  const info = db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run(bootstrapEmail);
+  if (info.changes > 0) {
+    console.log(`Granted admin role to ${bootstrapEmail} (via ADMIN_BOOTSTRAP_EMAIL).`);
+  } else {
+    console.log(
+      `ADMIN_BOOTSTRAP_EMAIL is set to ${bootstrapEmail}, but no account with that email exists yet. ` +
+      `Register on the site with this exact email, then restart the server to become admin.`
+    );
+  }
+}
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 
