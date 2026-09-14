@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car Parts Marketplace | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="Used and OEM car parts from AFCA Auto Sales for mechanics, individuals, and dealerships.">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/export.html" data-nav="export">Export / Salvage</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+
+<section class="page-hero container">
+  <h1>Car Parts Marketplace</h1>
+  <p class="muted">A source for local independent mechanics, individual DIYers, and other dealerships. Trade/bulk inquiries welcome — contact us directly for volume pricing.</p>
+</section>
+<section class="container">
+  <div id="parts-grid" class="grid"></div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/listings.js"></script>
+<script>loadPartsGrid("#parts-grid");</script>
+</body>
+</html>

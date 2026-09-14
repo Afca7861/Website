@@ -1,0 +1,141 @@
+# AFCA Auto Sales Ltd. — Website
+
+A real, deployable website for AFCA Auto Sales Ltd. covering all three lines
+of business the client described:
+
+1. **Local used vehicle sales** — for students, newcomers, low-income
+   families, and budget-conscious buyers.
+2. **Car parts marketplace** — for local mechanics, individuals, and other
+   dealerships.
+3. **Salvage & export vehicle sales** — to overseas buyers, primarily in
+   Eastern Europe, Africa, and the Middle East.
+
+The landing page follows the client's brief exactly: a sliding local-inventory
+carousel with text-over-image pricing (Section A), and a daily auction feed
+(Section B) whose **direct auction links are only sent to logged-in,
+registered accounts** — the server never sends the link to a logged-out
+browser at all, so it can't be recovered from page source or dev tools.
+
+Built by three roles, as requested:
+
+- **Tarrah — Website Outline Developer:** [`docs/outline.md`](docs/outline.md)
+  (sitemap, page-by-page content plan)
+- **Website Graphics Designer:** [`docs/design-system.md`](docs/design-system.md)
+  (colors, typography, layout rules, logo)
+- **Website Software Programmer:** everything under `server/` and `public/`
+
+## Important — read before you deploy
+
+**I could not run `npm install` or start the server inside the sandbox that
+built this code** — this environment's network policy blocks
+`registry.npmjs.org` outright (a `403 Host not in allowlist` from the
+network gateway, confirmed by direct testing, not something a retry fixes).
+So while every file has been syntax-checked and carefully reviewed by hand,
+**it has not been run end-to-end yet.** Please do that first, locally,
+before pointing a domain at it:
+
+```bash
+npm install
+cp .env.example .env
+# edit .env: set a real SESSION_SECRET (see the comment in that file)
+npm start
+```
+
+Then open `http://localhost:3000`, and click through: register an account,
+log out, confirm the auction feed hides the link when logged out and shows
+it when logged in, browse cars/parts/export, etc. If anything breaks, the
+error will be far easier to fix locally than to debug blind — sorry for the
+extra step, and thank you for bearing with the sandbox's limitation.
+
+## What's real vs. placeholder right now
+
+- **Real:** the business name, address, and public email (pulled from your
+  Facebook page), the three-service-line structure, the account
+  registration/login system, and the auction-gating logic.
+- **Placeholder — replace before launch:**
+  - Phone number and business hours (marked `[TODO]` in the footer/contact
+    page — your Facebook page currently just says "Always open," which
+    looks like an unset default rather than real hours)
+  - Twitter/X and Instagram links (marked `[TODO]` — send handles and I'll
+    wire them in, or edit the `social-icons` block in each page's footer)
+  - All vehicle, parts, and auction listings are clearly-labeled `SAMPLE —`
+    rows from `server/seed.js`, not real inventory
+  - The logo at `public/assets/logo.svg` is a rebuilt vector version of your
+    Facebook logo (same colors/layout) — I sampled the real logo's colors
+    directly but couldn't reliably transfer the exact image file through
+    this session; drop your real logo file in as `public/assets/logo.svg`
+    (or point the `<img>` in each page's header at your file) to use the
+    exact original
+  - The contact form on `/contact.html` shows a success message but doesn't
+    actually send anywhere yet — wire it to an email service or CRM
+
+## Getting real inventory into the site
+
+Listings live in a SQLite database (`data/afca.db`, created automatically).
+Three ways to manage them, roughly in order of effort:
+
+1. **Quickest:** open `data/afca.db` with a SQLite browser (e.g. "DB Browser
+   for SQLite") and edit the `vehicles`, `parts`, and `auctions` tables
+   directly.
+2. **Scriptable:** write a small Node script using the same `better-sqlite3`
+   `db` object (see `server/seed.js` for the pattern) that reads from
+   whatever spreadsheet or export AFCA already uses.
+3. **Automated:** if the "Daily Cars" Google Drive workflow already used for
+   Facebook posts has structured data (filenames, a spreadsheet, etc.), that
+   could feed the `vehicles`/`auctions` tables on a schedule — ask me and I
+   can help build that connector once you tell me the folder's structure.
+
+## Project structure
+
+```
+server/
+  index.js        Express app entry point (sessions, static files, routes)
+  db.js           SQLite schema (users, vehicles, parts, auctions)
+  seed.js         Inserts sample listings on first run (run: npm run seed)
+  routes/
+    auth.js       /api/auth/register, /login, /logout, /me
+    listings.js   /api/vehicles, /api/parts (public, read-only)
+    auctions.js   /api/auctions (gates auction_url server-side by login state)
+public/
+  index.html, cars.html, parts.html, export.html, auctions.html,
+  vehicle.html, part.html, register.html, login.html, account.html,
+  about.html, contact.html, 404.html
+  css/style.css   Design system implemented as CSS custom properties
+  js/             main.js (nav + auth header), carousel.js, listings.js,
+                  auctions.js
+  assets/         logo.svg + placeholder images
+docs/
+  outline.md          Tarrah's sitemap & content plan
+  design-system.md    Color palette, typography, layout rules
+```
+
+## How the account gating actually works
+
+This was the client's specific requirement, so it's worth being explicit:
+`server/routes/auctions.js` reads the visitor's session on every request to
+`/api/auctions`. If there's no logged-in user, it **deletes the
+`auction_url` field from each row before sending the JSON response** — the
+link is never transmitted to a logged-out browser, not just hidden by CSS or
+JavaScript. A logged-in session (checked via `express-session`, backed by a
+SQLite-stored session table so logins survive server restarts) gets the
+full row including the link.
+
+## Deployment options
+
+This is a standard Node.js + Express app with a file-based SQLite database,
+so it runs almost anywhere that supports Node:
+
+- **Render / Railway / Fly.io** — simplest for a small business site;
+  connect the repo, set the `SESSION_SECRET` and `NODE_ENV=production`
+  environment variables, and deploy. Make sure whatever plan you pick has a
+  **persistent disk** for the `data/` folder — the SQLite file needs to
+  survive restarts and deploys, or accounts/listings will reset.
+- **A VPS (DigitalOcean, Linode, etc.)** — install Node 18+, `npm install`,
+  run with a process manager like PM2, and put nginx in front for HTTPS and
+  to serve the `afcaauto.ca` domain.
+- **Shared hosting with Node support** — works too, as long as it allows a
+  persistent SQLite file and long-running Node processes (not all
+  "PHP-style" shared hosts do).
+
+Point your `afcaauto.ca` domain's DNS at whichever host you choose once it's
+confirmed working.

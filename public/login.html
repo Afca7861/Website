@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log In | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="Log in to your AFCA Auto Sales account.">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/export.html" data-nav="export">Export / Salvage</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+
+<section class="container stack-lg" style="padding-top:32px;max-width:480px;">
+  <h1>Log in</h1>
+  <form id="login-form" class="stack">
+    <div id="login-message"></div>
+    <div>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required>
+    </div>
+    <div>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Log in</button>
+  </form>
+  <p class="muted">No account yet? <a href="/register.html">Register</a></p>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+
+<script>
+qs("#login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = qs("#login-message");
+  msg.innerHTML = "";
+  const form = e.target;
+  try {
+    await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email: form.email.value, password: form.password.value }) });
+    window.location.href = "/account.html";
+  } catch (err) {
+    msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+  }
+});
+</script>
+
+</body>
+</html>

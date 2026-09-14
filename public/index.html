@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="AFCA Auto Sales Ltd. — used cars, car parts, and salvage/export vehicles in Surrey, BC.">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/export.html" data-nav="export">Export / Salvage</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+
+<section class="hero">
+  <div class="container">
+    <h1>Honest deals on used cars, parts, and export vehicles.</h1>
+    <p class="muted">Serving Surrey and the Lower Mainland with reliable pre-owned vehicles, plus a parts marketplace for mechanics and dealers, and salvage/export vehicles shipped worldwide.</p>
+    <div class="landing-grid">
+      <div>
+        <div class="section-heading">
+          <h2 class="mt-0">Cars for Local Sale</h2>
+          <a href="/cars.html">Browse all inventory →</a>
+        </div>
+        <div id="hero-carousel"></div>
+      </div>
+      <div>
+        <div class="section-heading">
+          <h2 class="mt-0">Today's Auction Feed</h2>
+          <a href="/auctions.html">See full feed →</a>
+        </div>
+        <div id="hero-auctions" class="auction-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pitch-strip">
+  <div class="container">
+    <div class="pitch-grid">
+      <div class="pitch-card">
+        <span class="badge badge-gray">For mechanics &amp; dealers</span>
+        <h3>Car Parts Marketplace</h3>
+        <p class="muted">Quality used and OEM parts sourced from our own inventory — priced for local mechanics, individual buyers, and other dealerships.</p>
+        <a class="btn btn-outline" href="/parts.html">Browse parts</a>
+      </div>
+      <div class="pitch-card">
+        <span class="badge badge-red">Worldwide export</span>
+        <h3>Salvage &amp; Export Vehicles</h3>
+        <p class="muted">Salvage-title and dismantled vehicles shipped to Eastern Europe, Africa, the Middle East, and beyond, with full documentation.</p>
+        <a class="btn btn-outline" href="/export.html">Browse export inventory</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/carousel.js"></script>
+<script src="/js/auctions.js"></script>
+<script src="/js/listings.js"></script>
+<script>loadHeroCarousel("#hero-carousel"); loadAuctions("#hero-auctions", 4);</script>
+</body>
+</html>

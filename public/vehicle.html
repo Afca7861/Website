@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicle Details | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="Vehicle details.">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/export.html" data-nav="export">Export / Salvage</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+
+<section class="container stack-lg" style="padding-top:24px;">
+  <div id="vehicle-detail">
+    <p class="muted">Loading…</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+
+<script>
+async function loadVehicleDetail() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  const target = qs("#vehicle-detail");
+  if (!id) { target.innerHTML = '<p class="form-error">No vehicle specified.</p>'; return; }
+  try {
+    const { vehicle } = await apiFetch(`/api/vehicles/${encodeURIComponent(id)}`);
+    document.title = vehicle.title + " | AFCA Auto Sales Ltd.";
+    target.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <img src="${escapeHtml(vehicle.image_url || '/assets/placeholder-car.svg')}" alt="${escapeHtml(vehicle.title)}" style="width:100%;border-radius:10px;">
+        <div>
+          <h1>${escapeHtml(vehicle.title)}</h1>
+          <p class="price" style="font-family:var(--heading-font);font-size:28px;color:var(--afca-red);">${money(vehicle.price)}</p>
+          <p class="specs muted">${vehicle.year || ""} · ${escapeHtml(vehicle.make || "")} ${escapeHtml(vehicle.model || "")} · ${vehicle.mileage ? vehicle.mileage.toLocaleString() + " km" : "mileage n/a"}</p>
+          <p>${escapeHtml(vehicle.description || "")}</p>
+          <a class="btn btn-primary" href="/contact.html">Contact about this vehicle</a>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    target.innerHTML = `<p class="form-error">${escapeHtml(err.message)}</p>`;
+  }
+}
+loadVehicleDetail();
+</script>
+
+</body>
+</html>
