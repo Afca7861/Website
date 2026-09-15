@@ -8,6 +8,7 @@ const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
 const db = require("./db"); // ensures schema exists before anything else runs
+const { dataDir, uploadsDir } = require("./paths");
 
 const authRoutes = require("./routes/auth");
 const listingsRoutes = require("./routes/listings");
@@ -33,7 +34,7 @@ if (!process.env.SESSION_SECRET) {
 app.use(express.json());
 app.use(
   session({
-    store: new SQLiteStore({ db: "sessions.db", dir: path.join(__dirname, "..", "data") }),
+    store: new SQLiteStore({ db: "sessions.db", dir: dataDir }),
     secret: process.env.SESSION_SECRET || "dev-only-insecure-secret-change-me",
     resave: false,
     saveUninitialized: false,
@@ -67,6 +68,12 @@ if (process.env.ADMIN_BOOTSTRAP_EMAIL) {
     );
   }
 }
+
+// Photos uploaded through the admin panel live in uploadsDir (see
+// paths.js) — normally data/uploads next to the app, but once DATA_DIR
+// points at a persistent disk it's a folder on that disk instead. Either
+// way it's outside public/, so it needs its own static mount.
+app.use("/uploads", express.static(uploadsDir));
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 

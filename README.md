@@ -102,9 +102,30 @@ service plans don't include persistent disk storage, so both the SQLite
 database *and* any photos uploaded through the admin panel live on disk
 that gets wiped on every restart or redeploy. That's fine for testing, but
 before relying on this for real inventory, upgrade to a plan with a
-persistent disk (or move photo storage to something like Cloudinary/S3 —
-ask me and I can wire that in) so uploads and listings actually stick
-around.
+persistent disk and follow "Persistent storage on Render" below (or move
+photo storage to something like Cloudinary/S3 instead — ask me and I can
+wire that in).
+
+## Persistent storage on Render
+
+Once you're on a paid Render plan (persistent disks aren't available on
+the free tier), attach a disk so the database and uploaded photos stop
+resetting on every deploy:
+
+1. In the Render dashboard, open your web service → **Disks** tab → **Add
+   Disk**.
+2. Give it a name (e.g. `afca-data`), a **mount path** of `/var/data`, and
+   a size — 1 GB is plenty to start ($0.25/GB/month).
+3. Under **Environment**, add a variable: **Key** `DATA_DIR`, **Value**
+   `/var/data` (matching the mount path from step 2).
+4. Save — Render will redeploy. From then on, the SQLite database, the
+   session store, and every photo uploaded through `/admin.html` are
+   written to that disk instead of the app's source tree, so they survive
+   restarts and future deploys.
+
+Because switching this on starts from an empty disk, you'll need to
+register your admin account again afterward (see "Admin panel" above) —
+but this time it'll actually stick.
 
 ## Getting real inventory into the site
 
