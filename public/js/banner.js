@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (settings.banner_image_url) {
       banner.style.backgroundImage =
-        "linear-gradient(135deg, rgba(17,17,17,0.72) 0%, rgba(176,5,0,0.62) 55%, rgba(225,6,0,0.5) 100%), " +
+        "linear-gradient(135deg, rgba(17,17,17,0.4) 0%, rgba(90,25,20,0.3) 55%, rgba(110,28,20,0.2) 100%), " +
         `url('${settings.banner_image_url}')`;
     }
 
