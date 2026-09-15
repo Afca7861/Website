@@ -78,7 +78,7 @@ async function loadPartDetail() {
     const { part } = await apiFetch(`/api/parts/${encodeURIComponent(id)}`);
     document.title = part.title + " | AFCA Auto Sales Ltd.";
     target.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="detail-grid">
         <img src="${escapeHtml(part.image_url || '/assets/placeholder-part.svg')}" alt="${escapeHtml(part.title)}" style="width:100%;border-radius:10px;">
         <div>
           <h1>${escapeHtml(part.title)}</h1>

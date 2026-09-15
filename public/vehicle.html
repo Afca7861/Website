@@ -78,7 +78,7 @@ async function loadVehicleDetail() {
     const { vehicle } = await apiFetch(`/api/vehicles/${encodeURIComponent(id)}`);
     document.title = vehicle.title + " | AFCA Auto Sales Ltd.";
     target.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="detail-grid">
         <img src="${escapeHtml(vehicle.image_url || '/assets/placeholder-car.svg')}" alt="${escapeHtml(vehicle.title)}" style="width:100%;border-radius:10px;">
         <div>
           <h1>${escapeHtml(vehicle.title)}</h1>

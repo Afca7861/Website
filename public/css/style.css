@@ -54,8 +54,19 @@ header.site-header {
 nav.main-nav { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 nav.main-nav a { color: var(--afca-black); font-weight: 600; font-size: 15px; }
 nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decoration: none; }
-.nav-toggle { display: none; background: none; border: none; font-size: 25px; cursor: pointer; }
-.header-actions { display: flex; gap: 10px; align-items: center; }
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 10px;
+  margin: -10px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 
 @media (max-width: 768px) {
   nav.main-nav {
@@ -69,9 +80,17 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
     flex-direction: column;
     padding: 12px 20px;
     gap: 14px;
+    z-index: 30;
   }
   nav.main-nav.open { display: flex; }
   .nav-toggle { display: block; }
+}
+
+@media (max-width: 480px) {
+  .header-inner { padding: 10px 14px; gap: 8px; }
+  .brand img { height: 38px; }
+  .header-actions { gap: 6px; }
+  .header-actions .btn { padding: 7px 10px; font-size: 13px; }
 }
 
 /* Buttons */
@@ -125,20 +144,24 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 .site-banner-actions {
   position: absolute;
   top: 20px;
-  left: 20px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1120px;
+  padding: 0 20px;
   z-index: 2;
   display: flex;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  box-sizing: border-box;
 }
 .btn-invert { border-color: var(--afca-white); color: var(--afca-white); }
 .btn-invert:hover { background: var(--afca-white); color: var(--afca-black); }
 @media (max-width: 700px) {
   .site-banner { padding: 14px 0 6px; min-height: 320px; }
   .site-banner h1 { font-size: 28px; }
-  .site-banner-actions { left: 12px; right: 12px; }
+  .site-banner-actions { padding: 0 12px; }
   .site-banner-actions .btn { padding: 8px 14px; font-size: 14px; }
   .site-banner-inner { padding-top: 100px; }
 }
@@ -152,10 +175,8 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 .inventory-search .filter-bar { margin-bottom: 0; align-items: end; }
 .inventory-search .field { min-width: 150px; flex: 1 1 150px; }
 .inventory-search .btn { padding: 10px 20px; }
-@media (max-width: 700px) {
-  .inventory-search .filter-bar { flex-direction: column; align-items: stretch; }
-  .inventory-search .field { min-width: 0; }
-}
+/* Mobile stacking for .filter-bar (including this one) is handled by the
+   shared rule further down, so it's consistent on every page that uses it. */
 
 /* Hero / landing */
 .hero {
@@ -169,6 +190,18 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 }
 @media (max-width: 900px) {
   .landing-grid { grid-template-columns: 1fr; }
+}
+
+/* Vehicle/part detail pages (photo + info side by side, stacking on
+   mobile). Used by the inline JS in vehicle.html and part.html instead
+   of a fixed inline grid so it's actually responsive. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 700px) {
+  .detail-grid { grid-template-columns: 1fr; }
 }
 
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
@@ -201,6 +234,11 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 }
 .carousel-nav.prev { left: 10px; }
 .carousel-nav.next { right: 10px; }
+@media (max-width: 700px) {
+  /* Keep the prev/next taps within Apple/Google's ~44px touch-target
+     guideline instead of the smaller desktop-sized circles. */
+  .carousel-nav { width: 44px; height: 44px; font-size: 22px; }
+}
 .carousel-dots { position: absolute; bottom: 8px; right: 12px; display: flex; gap: 6px; }
 .carousel-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.5); display: block; }
 .carousel-dots span.active { background: var(--afca-white); }
@@ -257,10 +295,22 @@ input, select, textarea {
 .form-error { background: #FDECEC; color: var(--afca-red-dark); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
 .form-success { background: #EAF6EC; color: var(--afca-green); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
 .helptext { font-size: 13px; color: var(--afca-gray-600); margin-top: -8px; }
+@media (max-width: 700px) {
+  /* iOS Safari auto-zooms the page when a tapped input's font is under
+     16px — this keeps every form on mobile from jumping/zooming on focus. */
+  input, select, textarea { font-size: 16px; }
+}
 
 /* Filter bar */
 .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: end; }
 .filter-bar .field { min-width: 160px; }
+@media (max-width: 700px) {
+  /* Stack into a clean vertical list with a full-width search button —
+     easier to tap and read than a squeezed row on a phone screen. */
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-bar .field { min-width: 0; }
+  .filter-bar button.btn { width: 100%; }
+}
 
 /* Footer */
 footer.site-footer { background: var(--afca-black); color: #ddd; margin-top: 48px; padding: 36px 0 24px; }
