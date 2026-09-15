@@ -105,15 +105,18 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
   background-size: cover;
   background-position: center;
   padding: 56px 0 64px;
+  min-height: 440px;
+  display: flex;
+  align-items: center;
 }
-.site-banner-inner { position: relative; z-index: 1; max-width: 640px; }
+.site-banner-inner { position: relative; z-index: 1; max-width: 720px; width: 100%; }
 .site-banner h1 { color: var(--afca-white); margin-bottom: 14px; }
 .site-banner p { color: rgba(255,255,255,0.88); font-size: 18px; margin-bottom: 0; }
 .site-banner-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .btn-invert { border-color: var(--afca-white); color: var(--afca-white); }
 .btn-invert:hover { background: var(--afca-white); color: var(--afca-black); }
 @media (max-width: 700px) {
-  .site-banner { padding: 40px 0 48px; }
+  .site-banner { padding: 40px 0 48px; min-height: 320px; }
   .site-banner h1 { font-size: 29px; }
 }
 

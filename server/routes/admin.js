@@ -80,7 +80,8 @@ router.put("/settings", (req, res) => {
   const applyAll = db.transaction(() => {
     for (const key of settingsKeys) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-        upsert.run({ key, value: data[key] == null ? "" : String(data[key]) });
+        const value = data[key] == null ? "" : String(data[key]).trim();
+        upsert.run({ key, value });
       }
     }
   });

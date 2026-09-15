@@ -16,11 +16,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         "linear-gradient(135deg, rgba(17,17,17,0.72) 0%, rgba(176,5,0,0.62) 55%, rgba(225,6,0,0.5) 100%), " +
         `url('${settings.banner_image_url}')`;
     }
-    if (settings.banner_headline) {
-      qs("#banner-headline").textContent = settings.banner_headline;
+
+    // Whitespace-only headline/subtext (e.g. an admin clearing the field)
+    // should hide the line entirely rather than leaving an empty gap.
+    const headline = (settings.banner_headline || "").trim();
+    const subtext = (settings.banner_subtext || "").trim();
+    const headlineEl = qs("#banner-headline");
+    const subtextEl = qs("#banner-subtext");
+
+    if (headline) {
+      headlineEl.textContent = headline;
+      headlineEl.hidden = false;
+    } else if (settings.banner_headline !== undefined) {
+      headlineEl.hidden = true;
     }
-    if (settings.banner_subtext) {
-      qs("#banner-subtext").textContent = settings.banner_subtext;
+
+    if (subtext) {
+      subtextEl.textContent = subtext;
+      subtextEl.hidden = false;
+    } else if (settings.banner_subtext !== undefined) {
+      subtextEl.hidden = true;
     }
   } catch (e) {
     // Fall back silently to the default placeholder banner already in the page.
