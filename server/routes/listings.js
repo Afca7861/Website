@@ -8,11 +8,65 @@ const db = require("../db");
 const router = express.Router();
 
 router.get("/vehicles", (req, res) => {
-  const category = req.query.category === "export" ? "export" : "local";
-  const rows = db
-    .prepare("SELECT * FROM vehicles WHERE category = ? ORDER BY created_at DESC")
-    .all(category);
+  // category: "export" filters to export/salvage, "all" skips the category
+  // filter entirely (used by the inventory search), and anything else
+  // (including no category at all) keeps the original default of "local"
+  // so existing callers like cars.html/export.html are unaffected.
+  const clauses = [];
+  const params = [];
+
+  if (req.query.category === "export") {
+    clauses.push("category = ?");
+    params.push("export");
+  } else if (req.query.category !== "all") {
+    clauses.push("category = ?");
+    params.push("local");
+  }
+
+  if (req.query.condition) {
+    clauses.push("condition_note = ?");
+    params.push(req.query.condition);
+  }
+  if (req.query.year) {
+    clauses.push("year = ?");
+    params.push(Number(req.query.year));
+  }
+  if (req.query.make) {
+    clauses.push("make = ?");
+    params.push(req.query.make);
+  }
+  if (req.query.model) {
+    clauses.push("model = ?");
+    params.push(req.query.model);
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const rows = db.prepare(`SELECT * FROM vehicles ${where} ORDER BY created_at DESC`).all(...params);
   res.json({ vehicles: rows });
+});
+
+// Distinct values currently in the vehicles table, for building the
+// homepage search dropdowns (Condition / Year / Make / Model) so they
+// always reflect real inventory rather than a hardcoded list. Registered
+// before /vehicles/:id so "facets" isn't swallowed as an :id value.
+router.get("/vehicles/facets", (req, res) => {
+  const distinct = (column, extraWhere) => {
+    const where = [`${column} IS NOT NULL`, `TRIM(${column}) <> ''`];
+    if (extraWhere) where.push(extraWhere);
+    return db
+      .prepare(`SELECT DISTINCT ${column} AS value FROM vehicles WHERE ${where.join(" AND ")} ORDER BY ${column}`)
+      .all()
+      .map((r) => r.value);
+  };
+  res.json({
+    conditions: distinct("condition_note"),
+    years: db
+      .prepare("SELECT DISTINCT year AS value FROM vehicles WHERE year IS NOT NULL ORDER BY year DESC")
+      .all()
+      .map((r) => r.value),
+    makes: distinct("make"),
+    models: distinct("model"),
+  });
 });
 
 router.get("/vehicles/:id", (req, res) => {

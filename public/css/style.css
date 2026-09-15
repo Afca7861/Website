@@ -129,6 +129,20 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
   .site-banner h1 { font-size: 29px; }
 }
 
+/* Inventory search row (sits directly under the homepage banner) */
+.inventory-search {
+  background: var(--afca-white);
+  border-bottom: 1px solid var(--afca-gray-200);
+  padding: 18px 0;
+}
+.inventory-search .filter-bar { margin-bottom: 0; align-items: end; }
+.inventory-search .field { min-width: 150px; flex: 1 1 150px; }
+.inventory-search .btn { padding: 10px 20px; }
+@media (max-width: 700px) {
+  .inventory-search .filter-bar { flex-direction: column; align-items: stretch; }
+  .inventory-search .field { min-width: 0; }
+}
+
 /* Hero / landing */
 .hero {
   background: var(--afca-gray-50);

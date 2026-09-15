@@ -41,6 +41,32 @@
   </div>
 </section>
 
+<section class="inventory-search">
+  <div class="container">
+    <form class="filter-bar" id="inventory-search-form">
+      <div class="field">
+        <label for="search-condition">Condition</label>
+        <select id="search-condition" name="condition"><option value="">Any condition</option></select>
+      </div>
+      <div class="field">
+        <label for="search-year">Year</label>
+        <select id="search-year" name="year"><option value="">Any year</option></select>
+      </div>
+      <div class="field">
+        <label for="search-make">Make</label>
+        <select id="search-make" name="make"><option value="">Any make</option></select>
+      </div>
+      <div class="field">
+        <label for="search-model">Model</label>
+        <select id="search-model" name="model"><option value="">Any model</option></select>
+      </div>
+      <div class="field">
+        <button class="btn btn-primary" type="submit">Search Inventory</button>
+      </div>
+    </form>
+  </div>
+</section>
+
 <section class="hero">
   <div class="container">
     <div class="landing-grid">
@@ -116,6 +142,7 @@
 <script src="/js/auctions.js"></script>
 <script src="/js/listings.js"></script>
 <script src="/js/banner.js"></script>
+<script src="/js/search.js"></script>
 <script>loadHeroCarousel("#hero-carousel"); loadAuctions("#hero-auctions", 4);</script>
 </body>
 </html>
