@@ -104,7 +104,7 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
     url('/assets/banner-placeholder.svg');
   background-size: cover;
   background-position: center;
-  padding: 56px 0 20px;
+  padding: 56px 0 6px;
   min-height: 440px;
   display: flex;
   align-items: stretch;
@@ -125,7 +125,7 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 .btn-invert { border-color: var(--afca-white); color: var(--afca-white); }
 .btn-invert:hover { background: var(--afca-white); color: var(--afca-black); }
 @media (max-width: 700px) {
-  .site-banner { padding: 40px 0 18px; min-height: 320px; }
+  .site-banner { padding: 40px 0 6px; min-height: 320px; }
   .site-banner h1 { font-size: 29px; }
 }
 
