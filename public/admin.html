@@ -62,7 +62,14 @@
         <div><label>Make</label><input name="make"></div>
         <div><label>Model</label><input name="model"></div>
         <div><label>Mileage (km)</label><input name="mileage" type="number" min="0"></div>
-        <div><label>Condition note</label><input name="condition_note" placeholder="Inspected"></div>
+        <div>
+          <label>Condition</label>
+          <select name="condition_note">
+            <option value="">Select condition</option>
+            <option value="Rebuilt">Rebuilt</option>
+            <option value="Clean Title">Clean Title</option>
+          </select>
+        </div>
         <div><label>Tags (comma-separated)</label><input name="tags" placeholder="budget,family"></div>
         <div class="field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
         <div class="field-full" id="msg-local"></div>
