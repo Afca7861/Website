@@ -54,6 +54,40 @@ router.post("/upload", (req, res) => {
   });
 });
 
+// ---- Site settings (currently just the homepage banner) ----
+
+const settingsKeys = ["banner_image_url", "banner_headline", "banner_subtext"];
+
+function readSettings() {
+  const rows = db.prepare("SELECT key, value FROM settings").all();
+  const out = {};
+  rows.forEach((r) => {
+    out[r.key] = r.value;
+  });
+  return out;
+}
+
+router.get("/settings", (req, res) => {
+  res.json({ settings: readSettings() });
+});
+
+router.put("/settings", (req, res) => {
+  const data = req.body || {};
+  const upsert = db.prepare(`
+    INSERT INTO settings (key, value) VALUES (@key, @value)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+  `);
+  const applyAll = db.transaction(() => {
+    for (const key of settingsKeys) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        upsert.run({ key, value: data[key] == null ? "" : String(data[key]) });
+      }
+    }
+  });
+  applyAll();
+  res.json({ settings: readSettings() });
+});
+
 // ---- helpers ----
 
 function pick(obj, fields) {

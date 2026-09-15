@@ -74,8 +74,11 @@ extra step, and thank you for bearing with the sandbox's limitation.
 There's now a real admin UI at **`/admin.html`** (sign in at
 **`/admin-login.html`**) for posting and editing listings in all four
 sections — local cars, export/salvage cars, parts, and the daily auction
-feed — including uploading a photo for each one. No coding or database
-tool required day-to-day.
+feed — including uploading a photo for each one. It also has a **Site
+Banner** tab for changing the homepage banner's photo, headline, and
+subtext without touching any code — upload a photo there and it replaces
+the default placeholder graphic on the homepage immediately. No coding or
+database tool required day-to-day.
 
 **Becoming the first admin** (there's no public sign-up for this, on
 purpose):

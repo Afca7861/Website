@@ -65,6 +65,16 @@ CREATE TABLE IF NOT EXISTS auctions (
   close_time TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Site-wide, admin-editable settings (currently just the homepage banner).
+-- Small and generic on purpose: a key/value row per setting rather than a
+-- dedicated table, since there's only a handful of these. Every key here
+-- is readable by anyone via GET /api/settings, so don't add anything
+-- sensitive to this table.
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
 `);
 
 module.exports = db;

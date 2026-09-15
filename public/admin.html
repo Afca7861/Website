@@ -41,6 +41,7 @@
       <button type="button" class="admin-tab" data-tab="export">Export / Salvage</button>
       <button type="button" class="admin-tab" data-tab="parts">Car Parts</button>
       <button type="button" class="admin-tab" data-tab="auctions">Auction Feed</button>
+      <button type="button" class="admin-tab" data-tab="banner">Site Banner</button>
     </div>
 
     <!-- LOCAL CARS -->
@@ -163,6 +164,29 @@
       </form>
       <h3>Current listings</h3>
       <div class="admin-table-wrap" id="table-auctions"></div>
+    </div>
+
+    <!-- SITE BANNER -->
+    <div class="admin-panel" data-panel="banner" hidden>
+      <h2>Homepage banner</h2>
+      <p class="muted">Controls the photo and headline at the top of the homepage. Leave a field blank to keep the current placeholder graphic and text.</p>
+      <form class="admin-form" id="form-banner">
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-banner" src="/assets/banner-placeholder.svg" alt="">
+          <div>
+            <label for="image-banner">Banner photo</label>
+            <input type="file" id="image-banner" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="banner_image_url">
+          </div>
+        </div>
+        <div class="field-full"><label>Headline</label><input name="banner_headline" placeholder="Honest deals on used cars, parts, and export vehicles."></div>
+        <div class="field-full"><label>Subtext</label><textarea name="banner_subtext" rows="2" placeholder="Serving Surrey and the Lower Mainland with reliable pre-owned vehicles..."></textarea></div>
+        <div class="field-full" id="msg-banner"></div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit" id="submit-banner">Save banner</button>
+        </div>
+      </form>
+      <p class="helptext">Changes appear on the homepage as soon as you save.</p>
     </div>
   </div>
 </section>

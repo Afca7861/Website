@@ -69,6 +69,7 @@ async function guardAdmin() {
     qs("#admin-guard").hidden = true;
     qs("#admin-app").hidden = false;
     Object.keys(SECTIONS).forEach(loadSection);
+    loadBannerSettings();
   } catch (e) {
     qs("#admin-guard").innerHTML =
       `<div class="form-error">You need an admin account to view this page. <a href="/admin-login.html">Sign in as admin</a></div>`;
@@ -211,10 +212,68 @@ function wireSection(name) {
   qs(`#cancel-${name}`).addEventListener("click", () => resetForm(name));
 }
 
+// ---- Site banner (single settings record, not a list — handled separately
+// from the SECTIONS engine above) ----
+
+async function loadBannerSettings() {
+  const form = qs("#form-banner");
+  if (!form) return;
+  try {
+    const { settings } = await apiFetch("/api/admin/settings");
+    if (settings.banner_headline) form.elements.banner_headline.value = settings.banner_headline;
+    if (settings.banner_subtext) form.elements.banner_subtext.value = settings.banner_subtext;
+    if (settings.banner_image_url) {
+      form.elements.banner_image_url.value = settings.banner_image_url;
+      qs("#preview-banner").src = settings.banner_image_url;
+    }
+  } catch (e) {
+    // Leave the form at its defaults if this fails; saving still works.
+  }
+}
+
+function wireBannerSection() {
+  const form = qs("#form-banner");
+  if (!form) return;
+  const fileInput = qs("#image-banner");
+  const preview = qs("#preview-banner");
+  const msg = qs("#msg-banner");
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    msg.innerHTML = `<p class="muted">Uploading photo…</p>`;
+    try {
+      const url = await uploadImage(file);
+      form.elements.banner_image_url.value = url;
+      msg.innerHTML = "";
+    } catch (err) {
+      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.innerHTML = "";
+    const payload = {
+      banner_image_url: form.elements.banner_image_url.value,
+      banner_headline: form.elements.banner_headline.value,
+      banner_subtext: form.elements.banner_subtext.value,
+    };
+    try {
+      await apiFetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(payload) });
+      msg.innerHTML = `<div class="form-success">Banner updated — check the homepage to see it live.</div>`;
+    } catch (err) {
+      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (!qs("#admin-app")) return; // not the admin page
   guardAdmin();
   Object.keys(SECTIONS).forEach(wireSection);
+  wireBannerSection();
 
   qsa(".admin-tab").forEach((btn) => {
     btn.addEventListener("click", () => {

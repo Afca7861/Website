@@ -32,4 +32,16 @@ router.get("/parts/:id", (req, res) => {
   res.json({ part: row });
 });
 
+// Public, read-only site settings (currently just the homepage banner —
+// photo/headline/subtext, editable by an admin at /admin.html). Nothing
+// in this table is sensitive, so it's fine to expose the whole thing.
+router.get("/settings", (req, res) => {
+  const rows = db.prepare("SELECT key, value FROM settings").all();
+  const out = {};
+  rows.forEach((r) => {
+    out[r.key] = r.value;
+  });
+  res.json({ settings: out });
+});
+
 module.exports = router;
