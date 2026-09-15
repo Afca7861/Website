@@ -118,15 +118,29 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding-top: 56px;
 }
 .site-banner h1 { color: var(--afca-white); margin-bottom: 14px; }
 .site-banner p { color: rgba(255,255,255,0.88); font-size: 18px; margin-bottom: 0; }
-.site-banner-actions { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+.site-banner-actions {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 .btn-invert { border-color: var(--afca-white); color: var(--afca-white); }
 .btn-invert:hover { background: var(--afca-white); color: var(--afca-black); }
 @media (max-width: 700px) {
   .site-banner { padding: 14px 0 6px; min-height: 320px; }
   .site-banner h1 { font-size: 29px; }
+  .site-banner-actions { left: 12px; right: 12px; }
+  .site-banner-actions .btn { padding: 8px 14px; font-size: 15px; }
+  .site-banner-inner { padding-top: 100px; }
 }
 
 /* Inventory search row (sits directly under the homepage banner) */
