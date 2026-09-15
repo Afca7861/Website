@@ -121,7 +121,7 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
 }
 .site-banner h1 { color: var(--afca-white); margin-bottom: 14px; }
 .site-banner p { color: rgba(255,255,255,0.88); font-size: 18px; margin-bottom: 0; }
-.site-banner-actions { display: flex; justify-content: center; gap: 12px; margin-top: auto; padding-top: 24px; flex-wrap: wrap; }
+.site-banner-actions { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
 .btn-invert { border-color: var(--afca-white); color: var(--afca-white); }
 .btn-invert:hover { background: var(--afca-white); color: var(--afca-black); }
 @media (max-width: 700px) {
