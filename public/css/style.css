@@ -1,6 +1,13 @@
 :root {
-  --afca-red: #E10600;
-  --afca-red-dark: #B00500;
+  /* Brand accent — buttons, links, badges, prices, active nav. Blue,
+     everywhere except the homepage banner, which intentionally stays on
+     its own red/maroon gradient (see .site-banner below). */
+  --afca-red: #1458C4;
+  --afca-red-dark: #0D3E8F;
+  /* Dedicated error red — kept separate from --afca-red-dark so error
+     messages (.form-error) stay red for clarity even though the brand
+     accent above is now blue. */
+  --afca-error: #B00500;
   --afca-black: #111111;
   --afca-green: #0B6E1F;
   --afca-white: #FFFFFF;
@@ -277,7 +284,7 @@ nav.main-nav a.active, nav.main-nav a:hover { color: var(--afca-red); text-decor
   border-radius: 20px; align-self: flex-start;
 }
 .badge-green { background: rgba(11,110,31,0.12); color: var(--afca-green); }
-.badge-red { background: rgba(225,6,0,0.1); color: var(--afca-red); }
+.badge-red { background: rgba(20,88,196,0.12); color: var(--afca-red); }
 .badge-gray { background: var(--afca-gray-50); color: var(--afca-gray-600); }
 
 section.pitch-strip { padding: 40px 0; }
@@ -292,7 +299,7 @@ input, select, textarea {
   width: 100%; padding: 10px 12px; border: 1px solid var(--afca-gray-200);
   border-radius: 6px; font-size: 15px; font-family: var(--body-font);
 }
-.form-error { background: #FDECEC; color: var(--afca-red-dark); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+.form-error { background: #FDECEC; color: var(--afca-error); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
 .form-success { background: #EAF6EC; color: var(--afca-green); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
 .helptext { font-size: 13px; color: var(--afca-gray-600); margin-top: -8px; }
 @media (max-width: 700px) {
@@ -308,7 +315,7 @@ input, select, textarea {
   /* Stack into a clean vertical list with a full-width search button —
      easier to tap and read than a squeezed row on a phone screen. */
   .filter-bar { flex-direction: column; align-items: stretch; }
-  .filter-bar .field { min-width: 0; }
+  .filter-bar .field { min-width: 0; flex: 0 0 auto; }
   .filter-bar button.btn { width: 100%; }
 }
 
