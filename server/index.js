@@ -31,6 +31,65 @@ if (!process.env.SESSION_SECRET) {
   );
 }
 
+// ---- Maintenance mode ---------------------------------------------------
+// Optional: set MAINTENANCE_MODE=true (plus MAINTENANCE_BYPASS_TOKEN) in
+// the environment to take the site offline for the public while keeping a
+// private preview link working for you. See README.md "Taking the site
+// offline temporarily" for exact steps. Safe to leave MAINTENANCE_MODE
+// unset the rest of the time — none of this runs unless it's "true".
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === "true";
+const MAINTENANCE_BYPASS_TOKEN = (process.env.MAINTENANCE_BYPASS_TOKEN || "").trim();
+const MAINTENANCE_COOKIE = "afca_preview";
+
+function parseCookies(header) {
+  const out = {};
+  if (!header) return out;
+  header.split(";").forEach((part) => {
+    const idx = part.indexOf("=");
+    if (idx === -1) return;
+    const key = part.slice(0, idx).trim();
+    const val = part.slice(idx + 1).trim();
+    if (key) out[key] = decodeURIComponent(val);
+  });
+  return out;
+}
+
+if (MAINTENANCE_MODE) {
+  if (!MAINTENANCE_BYPASS_TOKEN) {
+    console.warn(
+      "WARNING: MAINTENANCE_MODE is true but MAINTENANCE_BYPASS_TOKEN is not set, so maintenance mode is NOT being enforced " +
+      "(failing open rather than locking everyone out, including you, by accident). Set MAINTENANCE_BYPASS_TOKEN to actually enable it."
+    );
+  } else {
+    console.log("Maintenance mode is ON. Public visitors will see the maintenance page until MAINTENANCE_MODE is unset.");
+    app.use((req, res, next) => {
+      const cookies = parseCookies(req.headers.cookie);
+      const hasBypassCookie = cookies[MAINTENANCE_COOKIE] === MAINTENANCE_BYPASS_TOKEN;
+      const queryTokenMatches = req.query.preview === MAINTENANCE_BYPASS_TOKEN;
+
+      if (hasBypassCookie || queryTokenMatches) {
+        if (queryTokenMatches && !hasBypassCookie) {
+          // First visit via the preview link — remember it so the rest of
+          // the site (pages, API calls, uploaded photos) keeps working
+          // without the ?preview= param on every single request.
+          res.cookie(MAINTENANCE_COOKIE, MAINTENANCE_BYPASS_TOKEN, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+          });
+        }
+        return next();
+      }
+
+      if (req.path.startsWith("/api/")) {
+        return res.status(503).json({ error: "Site is temporarily offline for maintenance." });
+      }
+      res.status(503).sendFile(path.join(__dirname, "..", "public", "maintenance.html"));
+    });
+  }
+}
+
 app.use(express.json());
 app.use(
   session({

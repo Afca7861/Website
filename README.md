@@ -130,6 +130,37 @@ Because switching this on starts from an empty disk, you'll need to
 register your admin account again afterward (see "Admin panel" above) —
 but this time it'll actually stick.
 
+## Taking the site offline temporarily
+
+Render's own **Maintenance Mode** (Dashboard → your service) blocks the
+site for everyone, including you — there's no bypass, so it's really only
+for "nobody needs to touch this right now." For anything where you still
+want to test while the public sees a "temporarily offline" page, use the
+app's own maintenance mode instead:
+
+1. In your hosting platform's environment variable settings (e.g. Render's
+   **Environment** tab), add:
+   - `MAINTENANCE_MODE` = `true`
+   - `MAINTENANCE_BYPASS_TOKEN` = any long random string you make up (e.g.
+     run `node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"`
+     and use the output)
+2. Save — the service restarts. From then on, every visitor sees a simple
+   "temporarily offline" page instead of the site.
+3. To keep testing yourself, open:
+   `https://www.afcaauto.ca/?preview=YOUR_TOKEN_HERE`
+   (swap in the token you set above). That link remembers you for 30 days
+   via a cookie, so after the first visit you can browse the site
+   completely normally — no need to keep the `?preview=` part on every
+   page.
+4. When you're ready to go live again, just delete (or blank out) the
+   `MAINTENANCE_MODE` variable and save — the site is back for everyone
+   immediately, no code changes needed.
+
+If you ever set `MAINTENANCE_MODE=true` but forget to set
+`MAINTENANCE_BYPASS_TOKEN`, the site intentionally stays fully live rather
+than locking everyone out by accident — check the Render logs for a
+warning if maintenance mode doesn't seem to be taking effect.
+
 ## Getting real inventory into the site
 
 Listings live in a SQLite database (`data/afca.db`, created automatically).
