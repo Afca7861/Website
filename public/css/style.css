@@ -436,11 +436,14 @@ input:focus, select:focus, textarea:focus { outline: 2px solid rgba(20,88,196,0.
   }
   .filter-bar .field { min-width: 0; text-align: center; }
   .filter-bar .field select { text-align: center; text-align-last: center; }
-  .filter-bar button.btn { grid-column: 1 / -1; width: 100%; }
+  /* The button's wrapping .field (not the button itself) is the grid
+     item, so it's the one that needs to span both columns. */
+  .filter-bar .field:has(button.btn) { grid-column: 1 / -1; }
+  .filter-bar button.btn { width: 100%; }
 }
-@media (max-width: 380px) {
-  /* Two select boxes get too cramped below ~380px wide — drop back to
-     a single centered column on the smallest phones. */
+@media (max-width: 340px) {
+  /* Two select boxes get too cramped below ~340px wide (older/small
+     phones) — drop back to a single centered column there. */
   .filter-bar { grid-template-columns: 1fr; }
 }
 
