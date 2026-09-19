@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS parts (
   contact_phone TEXT, -- seller's contact number for this listing
   contact_email TEXT, -- seller's contact email for this listing
   status TEXT NOT NULL DEFAULT 'active', -- 'active' | 'sold' | 'removed' — sellers manage their own listing status
-  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -135,6 +135,12 @@ ensureColumn("parts", "seller_id", "seller_id INTEGER REFERENCES users(id)");
 ensureColumn("parts", "contact_phone", "contact_phone TEXT");
 ensureColumn("parts", "contact_email", "contact_email TEXT");
 ensureColumn("parts", "status", "status TEXT NOT NULL DEFAULT 'active'");
-ensureColumn("parts", "updated_at", "updated_at TEXT NOT NULL DEFAULT (datetime('now'))");
+// SQLite disallows a function-call default (like `datetime('now')`) in
+// ALTER TABLE ADD COLUMN — only a literal constant or the special
+// CURRENT_TIME/CURRENT_DATE/CURRENT_TIMESTAMP keywords are allowed there,
+// even though CREATE TABLE (above) allows either. CURRENT_TIMESTAMP
+// produces the same 'YYYY-MM-DD HH:MM:SS' UTC format as datetime('now'),
+// so this is a safe like-for-like swap, not a behavior change.
+ensureColumn("parts", "updated_at", "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
 
 module.exports = db;
