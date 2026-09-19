@@ -57,7 +57,7 @@ p { margin: 0 0 1em; }
 a { color: var(--afca-red); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.container { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+.container { max-width: 1600px; margin: 0 auto; padding: 0 12px; }
 
 /* ---- Utility topbar (phone / hours / social) — sits above the main
    header, dark navy, Soni-style. Purely decorative/informational, no JS
@@ -72,8 +72,8 @@ a:hover { text-decoration: underline; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 20px;
-  max-width: 1160px;
+  padding: 7px 12px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 .topbar a { color: rgba(255,255,255,0.85); }
@@ -97,8 +97,8 @@ header.site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
-  max-width: 1160px;
+  padding: 10px 12px;
+  max-width: 1600px;
   margin: 0 auto;
   gap: 16px;
 }
@@ -290,11 +290,29 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
 }
 .landing-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 200px;
   gap: 24px;
 }
 @media (max-width: 900px) {
   .landing-grid { grid-template-columns: 1fr; }
+}
+
+/* Homepage auction feed (Section B) is a narrow sidebar next to the
+   much larger car carousel — only wide enough for the vehicle's name,
+   so we drop the thumbnail/close-time/link chrome that the full
+   /auctions.html list still shows in .auction-card by default. */
+#hero-auctions .auction-card {
+  padding: 8px 10px;
+}
+#hero-auctions .auction-card img,
+#hero-auctions .auction-card .meta span,
+#hero-auctions .auction-card .auction-link,
+#hero-auctions .auction-card .auction-lock {
+  display: none;
+}
+#hero-auctions .auction-card .meta strong {
+  font-size: 14px;
+  line-height: 1.3;
 }
 
 /* Vehicle/part detail pages (photo + info side by side, stacking on
