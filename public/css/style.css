@@ -425,11 +425,23 @@ input:focus, select:focus, textarea:focus { outline: 2px solid rgba(20,88,196,0.
 .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: end; }
 .filter-bar .field { min-width: 160px; }
 @media (max-width: 700px) {
-  /* Stack into a clean vertical list with a full-width search button —
-     easier to tap and read than a squeezed row on a phone screen. */
-  .filter-bar { flex-direction: column; align-items: stretch; }
-  .filter-bar .field { min-width: 0; flex: 0 0 auto; }
-  .filter-bar button.btn { width: 100%; }
+  /* Two dropdowns per row (centered, evenly sized) instead of a single
+     squeezed/uneven row — reads much cleaner on a phone screen. The
+     search button gets its own full-width row underneath. */
+  .filter-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+    align-items: end;
+  }
+  .filter-bar .field { min-width: 0; text-align: center; }
+  .filter-bar .field select { text-align: center; text-align-last: center; }
+  .filter-bar button.btn { grid-column: 1 / -1; width: 100%; }
+}
+@media (max-width: 380px) {
+  /* Two select boxes get too cramped below ~380px wide — drop back to
+     a single centered column on the smallest phones. */
+  .filter-bar { grid-template-columns: 1fr; }
 }
 
 /* ---- Payment calculator ---- */
