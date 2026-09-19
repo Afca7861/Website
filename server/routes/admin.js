@@ -77,9 +77,13 @@ router.post("/vehicles/upload", (req, res) => {
   });
 });
 
-// ---- Site settings (currently just the homepage banner) ----
+// ---- Site settings (the homepage's three hero-slide banners) ----
 
-const settingsKeys = ["banner_image_url", "banner_headline", "banner_subtext"];
+const settingsKeys = [
+  "banner_image_url", "banner_headline", "banner_subtext",
+  "parts_banner_image_url",
+  "export_banner_image_url",
+];
 
 function readSettings() {
   const rows = db.prepare("SELECT key, value FROM settings").all();
