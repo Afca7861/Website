@@ -141,6 +141,5 @@ ensureColumn("parts", "status", "status TEXT NOT NULL DEFAULT 'active'");
 // even though CREATE TABLE (above) allows either. CURRENT_TIMESTAMP
 // produces the same 'YYYY-MM-DD HH:MM:SS' UTC format as datetime('now'),
 // so this is a safe like-for-like swap, not a behavior change.
-ensureColumn("parts", "updated_at", "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
-
+ensureColumn("parts", "updated_at", "updated_at TEXT");
 module.exports = db;
