@@ -9,8 +9,10 @@ const SECTIONS = {
     key: "vehicles",
     filter: (row) => row.category === "local",
     fixed: { category: "local" },
-    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description", "image_url"],
+    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description"],
     numeric: ["price", "year", "mileage"],
+    multiImage: true,
+    maxPhotos: 12,
     columns: [
       { key: "title", label: "Title" },
       { key: "price", label: "Price", fmt: money },
@@ -22,8 +24,10 @@ const SECTIONS = {
     key: "vehicles",
     filter: (row) => row.category === "export",
     fixed: { category: "export" },
-    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description", "image_url"],
+    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description"],
     numeric: ["price", "year", "mileage"],
+    multiImage: true,
+    maxPhotos: 12,
     columns: [
       { key: "title", label: "Title" },
       { key: "price", label: "Price", fmt: money },
@@ -60,6 +64,9 @@ const SECTIONS = {
 
 const editingId = { local: null, export: null, parts: null, auctions: null };
 const rowCache = { local: [], export: [], parts: [], auctions: [] };
+// Photos uploaded so far for the local/export form currently open — the
+// multi-photo sections (mirrors pendingImageUrls in public/js/sell-parts.js).
+const pendingImages = { local: [], export: [] };
 
 async function guardAdmin() {
   try {
@@ -125,7 +132,12 @@ function startEdit(name, id) {
   SECTIONS[name].fields.forEach((f) => {
     if (form.elements[f]) form.elements[f].value = row[f] ?? "";
   });
-  qs(`#preview-${name}`).src = row.image_url || form.querySelector(".admin-preview")?.src || "";
+  if (SECTIONS[name].multiImage) {
+    pendingImages[name] = (row.images && row.images.length ? row.images : row.image_url ? [row.image_url] : []).slice();
+    renderImagePreviews(name);
+  } else {
+    qs(`#preview-${name}`).src = row.image_url || form.querySelector(".admin-preview")?.src || "";
+  }
   qs(`#submit-${name}`).textContent = "Save changes";
   qs(`#cancel-${name}`).hidden = false;
   form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -134,12 +146,49 @@ function startEdit(name, id) {
 function resetForm(name) {
   editingId[name] = null;
   const form = qs(`#form-${name}`);
-  const defaultPreview = name === "parts" ? "/assets/placeholder-part.svg" : "/assets/placeholder-car.svg";
   form.reset();
-  form.elements.image_url.value = "";
-  qs(`#preview-${name}`).src = defaultPreview;
+  if (SECTIONS[name].multiImage) {
+    pendingImages[name] = [];
+    renderImagePreviews(name);
+  } else {
+    const defaultPreview = name === "parts" ? "/assets/placeholder-part.svg" : "/assets/placeholder-car.svg";
+    form.elements.image_url.value = "";
+    qs(`#preview-${name}`).src = defaultPreview;
+  }
   qs(`#submit-${name}`).textContent = "Add listing";
   qs(`#cancel-${name}`).hidden = true;
+}
+
+// ---- Multi-photo listings (Local Cars / Export) — mirrors renderPreviews /
+// uploadPhotos in public/js/sell-parts.js ----
+
+function renderImagePreviews(name) {
+  const target = qs(`#photo-previews-${name}`);
+  if (!target) return;
+  target.innerHTML = pendingImages[name]
+    .map(
+      (url, i) => `
+      <div style="position:relative;">
+        <img src="${escapeHtml(url)}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--afca-gray-200);">
+        <button type="button" data-remove-photo="${i}" title="Remove" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--afca-black);color:#fff;font-size:12px;cursor:pointer;line-height:1;">×</button>
+      </div>`
+    )
+    .join("");
+  qsa("[data-remove-photo]", target).forEach((btn) =>
+    btn.addEventListener("click", () => {
+      pendingImages[name].splice(Number(btn.dataset.removePhoto), 1);
+      renderImagePreviews(name);
+    })
+  );
+}
+
+async function uploadVehiclePhotos(files) {
+  const fd = new FormData();
+  Array.from(files).forEach((f) => fd.append("images", f));
+  const res = await fetch("/api/admin/vehicles/upload", { method: "POST", credentials: "same-origin", body: fd });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Upload failed.");
+  return data.urls;
 }
 
 async function deleteRow(name, id) {
@@ -165,23 +214,46 @@ async function uploadImage(file) {
 function wireSection(name) {
   const cfg = SECTIONS[name];
   const form = qs(`#form-${name}`);
-  const fileInput = qs(`#image-${name}`);
-  const preview = qs(`#preview-${name}`);
   const msg = qs(`#msg-${name}`);
 
-  fileInput.addEventListener("change", async () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    preview.src = URL.createObjectURL(file);
-    msg.innerHTML = `<p class="muted">Uploading photo…</p>`;
-    try {
-      const url = await uploadImage(file);
-      form.elements.image_url.value = url;
-      msg.innerHTML = "";
-    } catch (err) {
-      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
-    }
-  });
+  if (cfg.multiImage) {
+    const fileInput = qs(`#photos-${name}`);
+    fileInput.addEventListener("change", async () => {
+      if (!fileInput.files.length) return;
+      const max = cfg.maxPhotos || 12;
+      if (pendingImages[name].length + fileInput.files.length > max) {
+        msg.innerHTML = `<div class="form-error">You can upload up to ${max} photos per listing.</div>`;
+        fileInput.value = "";
+        return;
+      }
+      msg.innerHTML = `<p class="muted">Uploading photos…</p>`;
+      try {
+        const urls = await uploadVehiclePhotos(fileInput.files);
+        pendingImages[name] = pendingImages[name].concat(urls);
+        renderImagePreviews(name);
+        msg.innerHTML = "";
+      } catch (err) {
+        msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+      }
+      fileInput.value = "";
+    });
+  } else {
+    const fileInput = qs(`#image-${name}`);
+    const preview = qs(`#preview-${name}`);
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      preview.src = URL.createObjectURL(file);
+      msg.innerHTML = `<p class="muted">Uploading photo…</p>`;
+      try {
+        const url = await uploadImage(file);
+        form.elements.image_url.value = url;
+        msg.innerHTML = "";
+      } catch (err) {
+        msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+      }
+    });
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -193,6 +265,7 @@ function wireSection(name) {
     cfg.numeric.forEach((f) => {
       if (payload[f] !== undefined && payload[f] !== "") payload[f] = Number(payload[f]);
     });
+    if (cfg.multiImage) payload.images = pendingImages[name];
     try {
       const id = editingId[name];
       if (id) {
