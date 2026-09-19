@@ -77,7 +77,11 @@ router.get("/vehicles/facets", (req, res) => {
 router.get("/vehicles/:id", (req, res) => {
   const row = db.prepare("SELECT * FROM vehicles WHERE id = ?").get(req.params.id);
   if (!row) return res.status(404).json({ error: "Vehicle not found." });
-  res.json({ vehicle: row });
+  const images = db
+    .prepare("SELECT image_url FROM vehicle_images WHERE vehicle_id = ? ORDER BY sort_order ASC, id ASC")
+    .all(req.params.id)
+    .map((i) => i.image_url);
+  res.json({ vehicle: { ...row, images: images.length ? images : row.image_url ? [row.image_url] : [] } });
 });
 
 // Parts catalog — combines admin-posted parts (seller_id NULL) and

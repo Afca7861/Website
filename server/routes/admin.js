@@ -33,6 +33,18 @@ const upload = multer({
   },
 });
 
+// A vehicle listing can carry several photos (mirrors the community
+// Parts Seller upload limit in server/routes/seller.js).
+const MAX_VEHICLE_PHOTOS = 12;
+const uploadMultiple = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: MAX_VEHICLE_PHOTOS },
+  fileFilter: (req, file, cb) => {
+    if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) return cb(null, true);
+    cb(new Error("Only JPG, PNG, WEBP, or GIF images are allowed."));
+  },
+});
+
 function requireAdmin(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ error: "Please log in." });
   const user = db.prepare("SELECT role FROM users WHERE id = ?").get(req.session.userId);
@@ -51,6 +63,17 @@ router.post("/upload", (req, res) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: "No image file received." });
     res.json({ url: `/uploads/${req.file.filename}` });
+  });
+});
+
+// Multiple photos in one request — used by the Local Cars / Export
+// listing forms. Returns the uploaded URLs in the same order the files
+// were sent (mirrors POST /api/seller/upload for community part sellers).
+router.post("/vehicles/upload", (req, res) => {
+  uploadMultiple.array("images", MAX_VEHICLE_PHOTOS)(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.files || !req.files.length) return res.status(400).json({ error: "No image files received." });
+    res.json({ urls: req.files.map((f) => `/uploads/${f.filename}`) });
   });
 });
 
@@ -117,8 +140,39 @@ const vehicleFields = [
   "mileage", "condition_note", "body_type", "description", "image_url", "tags",
 ];
 
+// ---- Vehicle photos (multiple per listing) --------------------------
+// Mirrors partWithImages/replaceImages in server/routes/seller.js:
+// vehicles.image_url stays a "primary photo" convenience column, kept in
+// sync with the first row in vehicle_images, so the homepage/inventory
+// grids (which only ever read image_url) keep showing one photo per
+// vehicle without any change on their end.
+
+function vehicleWithImages(id) {
+  const vehicle = db.prepare("SELECT * FROM vehicles WHERE id = ?").get(id);
+  if (!vehicle) return null;
+  const images = db
+    .prepare("SELECT image_url FROM vehicle_images WHERE vehicle_id = ? ORDER BY sort_order ASC, id ASC")
+    .all(id)
+    .map((i) => i.image_url);
+  return { ...vehicle, images: images.length ? images : vehicle.image_url ? [vehicle.image_url] : [] };
+}
+
+function replaceVehicleImages(vehicleId, urls) {
+  const clean = (urls || []).filter((u) => typeof u === "string" && u.trim()).slice(0, MAX_VEHICLE_PHOTOS);
+  const tx = db.transaction(() => {
+    db.prepare("DELETE FROM vehicle_images WHERE vehicle_id = ?").run(vehicleId);
+    const insert = db.prepare(
+      "INSERT INTO vehicle_images (vehicle_id, image_url, sort_order) VALUES (?, ?, ?)"
+    );
+    clean.forEach((url, i) => insert.run(vehicleId, url, i));
+    db.prepare("UPDATE vehicles SET image_url = ? WHERE id = ?").run(clean[0] || null, vehicleId);
+  });
+  tx();
+}
+
 router.get("/vehicles", (req, res) => {
-  res.json({ vehicles: db.prepare("SELECT * FROM vehicles ORDER BY created_at DESC").all() });
+  const rows = db.prepare("SELECT id FROM vehicles ORDER BY created_at DESC").all();
+  res.json({ vehicles: rows.map((r) => vehicleWithImages(r.id)) });
 });
 
 router.post("/vehicles", (req, res) => {
@@ -130,7 +184,8 @@ router.post("/vehicles", (req, res) => {
     INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, body_type, description, image_url, tags)
     VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @body_type, @description, @image_url, @tags)
   `).run(data);
-  res.status(201).json({ vehicle: db.prepare("SELECT * FROM vehicles WHERE id = ?").get(info.lastInsertRowid) });
+  if (Array.isArray(req.body.images)) replaceVehicleImages(info.lastInsertRowid, req.body.images);
+  res.status(201).json({ vehicle: vehicleWithImages(info.lastInsertRowid) });
 });
 
 router.put("/vehicles/:id", (req, res) => {
@@ -142,11 +197,16 @@ router.put("/vehicles/:id", (req, res) => {
       mileage=@mileage, condition_note=@condition_note, body_type=@body_type, description=@description, image_url=@image_url, tags=@tags
     WHERE id=@id
   `).run({ ...data, id: req.params.id });
-  res.json({ vehicle: db.prepare("SELECT * FROM vehicles WHERE id = ?").get(req.params.id) });
+  if (Array.isArray(req.body.images)) replaceVehicleImages(req.params.id, req.body.images);
+  res.json({ vehicle: vehicleWithImages(req.params.id) });
 });
 
 router.delete("/vehicles/:id", (req, res) => {
-  db.prepare("DELETE FROM vehicles WHERE id = ?").run(req.params.id);
+  const tx = db.transaction(() => {
+    db.prepare("DELETE FROM vehicle_images WHERE vehicle_id = ?").run(req.params.id);
+    db.prepare("DELETE FROM vehicles WHERE id = ?").run(req.params.id);
+  });
+  tx();
   res.json({ ok: true });
 });
 
