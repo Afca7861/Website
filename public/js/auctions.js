@@ -30,13 +30,22 @@ function renderAuctionCard(a) {
   `;
 }
 
-async function loadAuctions(targetSelector, limit) {
+async function loadAuctions(targetSelector, limit, opts) {
   const target = qs(targetSelector);
   if (!target) return;
   target.innerHTML = `<p class="muted">Loading today's auction feed…</p>`;
   try {
     const { auctions, loggedIn } = await apiFetch("/api/auctions");
-    const rows = limit ? auctions.slice(0, limit) : auctions;
+    // A few auction rows have no year/make/model on file (data entry
+    // gap, not a rendering bug). The full /auctions.html list still
+    // shows those — source/close-time/link is still useful there — but
+    // the homepage sidebar shows the vehicle NAME only, so a nameless
+    // row would render as a blank box. requireName skips those there.
+    let source = auctions;
+    if (opts && opts.requireName) {
+      source = source.filter((a) => a.year || a.make || a.model);
+    }
+    const rows = limit ? source.slice(0, limit) : source;
     if (rows.length === 0) {
       target.innerHTML = `<p class="muted">No auction listings yet — check back soon.</p>`;
       return;
