@@ -1,9 +1,9 @@
 // hero-slider.js — homepage hero: a rotating promo slider (Soni Motors-
-// style) instead of the old single static banner. Slide 1's photo/
-// headline/subtext still come from the admin-editable Site Banner
-// settings (same /api/settings the old banner.js read), so nothing an
-// admin already set is lost; slides 2 and 3 are fixed promos for the
-// Parts Marketplace and Export/Ship Cars lines of business. Pure
+// style) instead of the old single static banner. All three slides'
+// photos come from the admin-editable Site Banner settings (same
+// /api/settings the old banner.js read); slide 1 also has an editable
+// headline/subtext, while slides 2 and 3 keep their fixed promo copy for
+// the Parts Marketplace and Export/Ship Cars lines of business. Pure
 // client-side rotation — no dependency on any other script.
 
 const HERO_AUTOPLAY_MS = 6000;
@@ -27,7 +27,7 @@ function heroSlideDefs(settings) {
       ],
     },
     {
-      image: "/assets/placeholder-part.svg",
+      image: (settings && settings.parts_banner_image_url) || "/assets/placeholder-part.svg",
       eyebrow: "For Mechanics & Dealers",
       headline: "Car Parts Marketplace",
       subtext: "Quality used and OEM parts from our own inventory, plus listings from community sellers — searchable by make, model, year, and fuel type.",
@@ -37,7 +37,7 @@ function heroSlideDefs(settings) {
       ],
     },
     {
-      image: "/assets/placeholder-car.svg",
+      image: (settings && settings.export_banner_image_url) || "/assets/placeholder-car.svg",
       eyebrow: "Worldwide Export",
       headline: "Salvage & Export Vehicles",
       subtext: "Salvage-title and dismantled vehicles shipped to Eastern Europe, Africa, the Middle East, and beyond, with full documentation.",

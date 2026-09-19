@@ -288,6 +288,15 @@ function wireSection(name) {
 // ---- Site banner (single settings record, not a list — handled separately
 // from the SECTIONS engine above) ----
 
+// The three hero slides each get their own photo upload (fileInputId /
+// hiddenFieldName), keyed by the settings row they read from in
+// hero-slider.js. Slide 1 (Local Inventory) also has headline/subtext.
+const BANNER_IMAGE_FIELDS = [
+  { fileInputId: "image-banner", previewId: "preview-banner", hiddenField: "banner_image_url" },
+  { fileInputId: "image-banner-parts", previewId: "preview-banner-parts", hiddenField: "parts_banner_image_url" },
+  { fileInputId: "image-banner-export", previewId: "preview-banner-export", hiddenField: "export_banner_image_url" },
+];
+
 async function loadBannerSettings() {
   const form = qs("#form-banner");
   if (!form) return;
@@ -295,10 +304,12 @@ async function loadBannerSettings() {
     const { settings } = await apiFetch("/api/admin/settings");
     if (settings.banner_headline) form.elements.banner_headline.value = settings.banner_headline;
     if (settings.banner_subtext) form.elements.banner_subtext.value = settings.banner_subtext;
-    if (settings.banner_image_url) {
-      form.elements.banner_image_url.value = settings.banner_image_url;
-      qs("#preview-banner").src = settings.banner_image_url;
-    }
+    BANNER_IMAGE_FIELDS.forEach(({ previewId, hiddenField }) => {
+      if (settings[hiddenField]) {
+        form.elements[hiddenField].value = settings[hiddenField];
+        qs(`#${previewId}`).src = settings[hiddenField];
+      }
+    });
   } catch (e) {
     // Leave the form at its defaults if this fails; saving still works.
   }
@@ -307,32 +318,36 @@ async function loadBannerSettings() {
 function wireBannerSection() {
   const form = qs("#form-banner");
   if (!form) return;
-  const fileInput = qs("#image-banner");
-  const preview = qs("#preview-banner");
   const msg = qs("#msg-banner");
 
-  fileInput.addEventListener("change", async () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    preview.src = URL.createObjectURL(file);
-    msg.innerHTML = `<p class="muted">Uploading photo…</p>`;
-    try {
-      const url = await uploadImage(file);
-      form.elements.banner_image_url.value = url;
-      msg.innerHTML = "";
-    } catch (err) {
-      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
-    }
+  BANNER_IMAGE_FIELDS.forEach(({ fileInputId, previewId, hiddenField }) => {
+    const fileInput = qs(`#${fileInputId}`);
+    const preview = qs(`#${previewId}`);
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      preview.src = URL.createObjectURL(file);
+      msg.innerHTML = `<p class="muted">Uploading photo…</p>`;
+      try {
+        const url = await uploadImage(file);
+        form.elements[hiddenField].value = url;
+        msg.innerHTML = "";
+      } catch (err) {
+        msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+      }
+    });
   });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     msg.innerHTML = "";
     const payload = {
-      banner_image_url: form.elements.banner_image_url.value,
       banner_headline: form.elements.banner_headline.value,
       banner_subtext: form.elements.banner_subtext.value,
     };
+    BANNER_IMAGE_FIELDS.forEach(({ hiddenField }) => {
+      payload[hiddenField] = form.elements[hiddenField].value;
+    });
     try {
       await apiFetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(payload) });
       msg.innerHTML = `<div class="form-success">Banner updated — check the homepage to see it live.</div>`;
