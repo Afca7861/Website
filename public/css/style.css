@@ -330,14 +330,25 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
 .section-heading a { font-size: 14.5px; font-weight: 700; }
 
-/* Carousel (Section A: local cars for sale) */
+/* Carousel (Section A: local cars for sale). On desktop it stretches
+   to match the height of the auction sidebar next to it (a CSS Grid
+   row with height:auto sizes to its tallest item — the auction list —
+   and a 100%-height sibling then fills that same height), so the
+   picture's height always tracks however many auction cards are
+   listed rather than a fixed/oversized aspect ratio. Below the 900px
+   breakpoint the two columns stack (see .landing-grid), so there's no
+   sidebar height to match — aspect-ratio takes back over there. */
 .carousel {
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--afca-black);
-  aspect-ratio: 4 / 3;
+  height: 100%;
+  min-height: 260px;
   box-shadow: var(--shadow-md);
+}
+@media (max-width: 900px) {
+  .carousel { height: auto; aspect-ratio: 4 / 3; }
 }
 .carousel-track { display: flex; height: 100%; transition: transform 0.4s ease; }
 .carousel-slide { min-width: 100%; height: 100%; position: relative; }
@@ -380,6 +391,8 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
 .auction-card .meta { flex: 1; min-width: 0; }
 .auction-card .meta strong { display: block; font-size: 15px; }
 .auction-card .meta span { font-size: 13px; color: var(--afca-gray-600); }
+.auction-name-link { color: inherit; text-decoration: none; }
+.auction-name-link:hover { color: var(--afca-red); text-decoration: underline; }
 .auction-lock {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 13px; font-weight: 700; color: var(--afca-gray-600);
