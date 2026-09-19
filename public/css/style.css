@@ -330,6 +330,8 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
   padding: 18px 20px;
   background: linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0));
   color: var(--afca-white);
+  text-decoration: none;
+  cursor: pointer;
 }
 .carousel-caption .price { color: #fff; font-family: var(--heading-font); font-size: 22px; font-weight: 700; }
 .carousel-caption .tagline { font-size: 14px; opacity: 0.9; }
