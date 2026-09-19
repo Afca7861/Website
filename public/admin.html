@@ -63,13 +63,10 @@
     <div class="admin-panel" data-panel="local">
       <h2>Local-sale cars</h2>
       <form class="admin-form" id="form-local">
-        <div class="field-full admin-image-field">
-          <img class="admin-preview" id="preview-local" src="/assets/placeholder-car.svg" alt="">
-          <div>
-            <label for="image-local">Photo</label>
-            <input type="file" id="image-local" accept="image/jpeg,image/png,image/webp,image/gif">
-            <input type="hidden" name="image_url">
-          </div>
+        <div class="field-full">
+          <label for="photos-local">Photos (up to 12 — the first photo is used as the listing's main photo)</label>
+          <input type="file" id="photos-local" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+          <div id="photo-previews-local" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
         </div>
         <div><label>Title</label><input name="title" required placeholder="2016 Honda Civic LX"></div>
         <div><label>Price (CAD)</label><input name="price" type="number" min="0" step="1"></div>
@@ -113,13 +110,10 @@
     <div class="admin-panel" data-panel="export" hidden>
       <h2>Export / salvage vehicles</h2>
       <form class="admin-form" id="form-export">
-        <div class="field-full admin-image-field">
-          <img class="admin-preview" id="preview-export" src="/assets/placeholder-car.svg" alt="">
-          <div>
-            <label for="image-export">Photo</label>
-            <input type="file" id="image-export" accept="image/jpeg,image/png,image/webp,image/gif">
-            <input type="hidden" name="image_url">
-          </div>
+        <div class="field-full">
+          <label for="photos-export">Photos (up to 12 — the first photo is used as the listing's main photo)</label>
+          <input type="file" id="photos-export" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+          <div id="photo-previews-export" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
         </div>
         <div><label>Title</label><input name="title" required placeholder="2013 BMW 3 Series (Salvage Title)"></div>
         <div><label>Price (CAD)</label><input name="price" type="number" min="0" step="1"></div>

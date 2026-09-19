@@ -84,6 +84,27 @@
 <script src="/js/main.js"></script>
 
 <script>
+// Same gallery pattern as public/part.html's partGallery(): a large main
+// photo plus a row of clickable thumbnails when there's more than one
+// photo, so a visitor who opens a specific vehicle's page can flip
+// through every photo the admin uploaded for it — while the homepage and
+// inventory grids (loadVehicleGrid in public/js/listings.js) keep showing
+// just the one primary photo per listing.
+function vehicleGallery(images, title) {
+  const list = images && images.length ? images : ["/assets/placeholder-car.svg"];
+  const main = `<img id="vehicle-main-photo" src="${escapeHtml(list[0])}" alt="${escapeHtml(title)}" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover;">`;
+  if (list.length <= 1) return main;
+  const thumbs = list
+    .map(
+      (url, i) => `<img src="${escapeHtml(url)}" data-thumb="${i}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ${i === 0 ? "var(--afca-red)" : "transparent"};">`
+    )
+    .join("");
+  return `
+    ${main}
+    <div id="vehicle-thumbs" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">${thumbs}</div>
+  `;
+}
+
 async function loadVehicleDetail() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
@@ -94,7 +115,7 @@ async function loadVehicleDetail() {
     document.title = vehicle.title + " | AFCA Auto Sales Ltd.";
     target.innerHTML = `
       <div class="detail-grid">
-        <img src="${escapeHtml(vehicle.image_url || '/assets/placeholder-car.svg')}" alt="${escapeHtml(vehicle.title)}" style="width:100%;border-radius:10px;">
+        <div>${vehicleGallery(vehicle.images, vehicle.title)}</div>
         <div>
           <h1>${escapeHtml(vehicle.title)}</h1>
           <p class="price" style="font-family:var(--heading-font);font-size:28px;color:var(--afca-red);">${money(vehicle.price)}</p>
@@ -104,6 +125,17 @@ async function loadVehicleDetail() {
         </div>
       </div>
     `;
+
+    const thumbsEl = qs("#vehicle-thumbs");
+    if (thumbsEl) {
+      qsa("img[data-thumb]", thumbsEl).forEach((img) => {
+        img.addEventListener("click", () => {
+          qs("#vehicle-main-photo").src = img.src;
+          qsa("img[data-thumb]", thumbsEl).forEach((t) => (t.style.borderColor = "transparent"));
+          img.style.borderColor = "var(--afca-red)";
+        });
+      });
+    }
   } catch (err) {
     target.innerHTML = `<p class="form-error">${escapeHtml(err.message)}</p>`;
   }
