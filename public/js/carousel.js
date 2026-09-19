@@ -19,10 +19,10 @@ async function loadHeroCarousel(targetSelector) {
               (v) => `
             <div class="carousel-slide">
               <img src="${escapeHtml(v.image_url || "/assets/placeholder-car.svg")}" alt="${escapeHtml(v.title)}">
-              <div class="carousel-caption">
+              <a class="carousel-caption" href="/vehicle.html?id=${v.id}">
                 <div class="price">${money(v.price)}</div>
                 <div class="tagline">${escapeHtml(v.title)}</div>
-              </div>
+              </a>
             </div>`
             )
             .join("")}
