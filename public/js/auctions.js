@@ -9,11 +9,20 @@ function renderAuctionCard(a) {
     ? `<a class="auction-lock" href="/register.html">🔒 Log in to view link</a>`
     : `<a class="auction-link" href="${escapeHtml(a.auction_url)}" target="_blank" rel="noopener">View auction →</a>`;
 
+  // The vehicle name itself is also a link to the same destination as
+  // linkArea above (the real auction listing when unlocked, or the
+  // register page when gated) — on the full /auctions.html cards this
+  // is a convenience since linkArea is already visible, but it's the
+  // ONLY click target on the homepage's narrow sidebar, where linkArea
+  // is hidden by CSS (#hero-auctions .auction-link/.auction-lock).
+  const nameHref = a.locked ? "/register.html" : escapeHtml(a.auction_url);
+  const nameLinkAttrs = a.locked ? "" : ` target="_blank" rel="noopener"`;
+
   return `
     <div class="auction-card">
       <img src="${escapeHtml(a.image_url || "/assets/placeholder-car.svg")}" alt="${escapeHtml(a.title)}">
       <div class="meta">
-        <strong>${escapeHtml(a.year || "")} ${escapeHtml(a.make || "")} ${escapeHtml(a.model || "")}</strong>
+        <strong><a class="auction-name-link" href="${nameHref}"${nameLinkAttrs}>${escapeHtml(a.year || "")} ${escapeHtml(a.make || "")} ${escapeHtml(a.model || "")}</a></strong>
         <span>${escapeHtml(a.auction_source || "")} · Closes: ${escapeHtml(a.close_time || "TBD")}</span>
       </div>
       ${linkArea}
