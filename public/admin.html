@@ -209,8 +209,9 @@
     <!-- SITE BANNER -->
     <div class="admin-panel" data-panel="banner" hidden>
       <h2>Homepage banner</h2>
-      <p class="muted">Controls the photo and headline at the top of the homepage. Leave a field blank to keep the current placeholder graphic and text.</p>
+      <p class="muted">The homepage hero rotates through three slides — Local Inventory, Car Parts Marketplace, and Salvage &amp; Export Vehicles. Set each slide's photo here. Leave a field blank to keep the current placeholder graphic and text.</p>
       <form class="admin-form" id="form-banner">
+        <h3>Slide 1 — Local Inventory</h3>
         <div class="field-full admin-image-field">
           <img class="admin-preview" id="preview-banner" src="/assets/banner-placeholder.svg" alt="">
           <div>
@@ -221,6 +222,27 @@
         </div>
         <div class="field-full"><label>Headline</label><input name="banner_headline" placeholder="Honest deals on used cars, parts, and export vehicles."></div>
         <div class="field-full"><label>Subtext</label><textarea name="banner_subtext" rows="2" placeholder="Serving Surrey and the Lower Mainland with reliable pre-owned vehicles..."></textarea></div>
+
+        <h3>Slide 2 — Car Parts Marketplace</h3>
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-banner-parts" src="/assets/placeholder-part.svg" alt="">
+          <div>
+            <label for="image-banner-parts">Banner photo</label>
+            <input type="file" id="image-banner-parts" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="parts_banner_image_url">
+          </div>
+        </div>
+
+        <h3>Slide 3 — Salvage &amp; Export Vehicles</h3>
+        <div class="field-full admin-image-field">
+          <img class="admin-preview" id="preview-banner-export" src="/assets/placeholder-car.svg" alt="">
+          <div>
+            <label for="image-banner-export">Banner photo</label>
+            <input type="file" id="image-banner-export" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="hidden" name="export_banner_image_url">
+          </div>
+        </div>
+
         <div class="field-full" id="msg-banner"></div>
         <div class="admin-form-actions">
           <button class="btn btn-primary" type="submit" id="submit-banner">Save banner</button>
