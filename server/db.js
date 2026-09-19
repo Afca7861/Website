@@ -48,6 +48,20 @@ CREATE TABLE IF NOT EXISTS vehicles (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Multiple photos per vehicle (a single listing can have several
+-- pictures). vehicles.image_url above stays as a "primary photo"
+-- convenience column — kept in sync with the first row here (mirrors
+-- the part_images pattern below) — so the homepage/inventory grids,
+-- which only ever show one photo per vehicle, keep working unchanged.
+CREATE TABLE IF NOT EXISTS vehicle_images (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_vehicle_images_vehicle_id ON vehicle_images(vehicle_id);
+
 CREATE TABLE IF NOT EXISTS parts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
