@@ -9,7 +9,7 @@ const SECTIONS = {
     key: "vehicles",
     filter: (row) => row.category === "local",
     fixed: { category: "local" },
-    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "tags", "description", "image_url"],
+    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description", "image_url"],
     numeric: ["price", "year", "mileage"],
     columns: [
       { key: "title", label: "Title" },
@@ -22,7 +22,7 @@ const SECTIONS = {
     key: "vehicles",
     filter: (row) => row.category === "export",
     fixed: { category: "export" },
-    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "tags", "description", "image_url"],
+    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description", "image_url"],
     numeric: ["price", "year", "mileage"],
     columns: [
       { key: "title", label: "Title" },

@@ -12,8 +12,8 @@ const auctionCount = db.prepare("SELECT COUNT(*) AS n FROM auctions").get().n;
 
 if (vehicleCount === 0) {
   const insert = db.prepare(`
-    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, description, image_url, tags)
-    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @description, @image_url, @tags)
+    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, description, image_url, tags, body_type)
+    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @description, @image_url, @tags, @body_type)
   `);
   const sampleLocal = [
     {
@@ -28,6 +28,7 @@ if (vehicleCount === 0) {
       description: "Placeholder listing. Replace with real inventory before launch. Reliable commuter car, great first car or newcomer vehicle.",
       image_url: "/assets/placeholder-car.svg",
       tags: "first-time-buyer,budget",
+      body_type: "Sedan",
     },
     {
       category: "local",
@@ -41,6 +42,7 @@ if (vehicleCount === 0) {
       description: "Placeholder listing. Family-friendly SUV, AWD for BC winters.",
       image_url: "/assets/placeholder-car.svg",
       tags: "family,budget",
+      body_type: "SUV",
     },
     {
       category: "local",
@@ -54,6 +56,7 @@ if (vehicleCount === 0) {
       description: "Placeholder listing. Work-ready truck, well maintained.",
       image_url: "/assets/placeholder-car.svg",
       tags: "work-truck",
+      body_type: "Truck",
     },
   ];
   const sampleExport = [
@@ -69,6 +72,7 @@ if (vehicleCount === 0) {
       description: "Placeholder listing. Suitable for export/rebuild. Documentation provided for overseas buyers.",
       image_url: "/assets/placeholder-car.svg",
       tags: "salvage,export",
+      body_type: "Sedan",
     },
     {
       category: "export",
@@ -82,6 +86,7 @@ if (vehicleCount === 0) {
       description: "Placeholder listing. Container shipping available to Eastern Europe, Africa, and the Middle East.",
       image_url: "/assets/placeholder-car.svg",
       tags: "dismantled,export",
+      body_type: "Sedan",
     },
   ];
   const insertMany = db.transaction((rows) => {
@@ -93,15 +98,21 @@ if (vehicleCount === 0) {
 
 if (partCount === 0) {
   const insertPart = db.prepare(`
-    INSERT INTO parts (title, category, make_compat, model_compat, condition_note, price, quantity, description, image_url)
-    VALUES (@title, @category, @make_compat, @model_compat, @condition_note, @price, @quantity, @description, @image_url)
+    INSERT INTO parts (title, category, make_compat, model_compat, year_compat, fuel_type, condition_note, price, quantity, description, image_url)
+    VALUES (@title, @category, @make_compat, @model_compat, @year_compat, @fuel_type, @condition_note, @price, @quantity, @description, @image_url)
   `);
+  // These admin-style samples use the free-text condition wording the
+  // admin panel has always allowed ("Used — tested", "OEM — used", etc.)
+  // rather than the new seller-portal new/used dropdown, so they also
+  // double as a check that both styles of listing coexist fine in search.
   const sampleParts = [
     {
       title: "SAMPLE — Used Alternator",
       category: "Electrical",
       make_compat: "Honda",
-      model_compat: "Civic 2012-2016",
+      model_compat: "Civic",
+      year_compat: 2014,
+      fuel_type: "gas",
       condition_note: "Used — tested",
       price: 85,
       quantity: 3,
@@ -112,7 +123,9 @@ if (partCount === 0) {
       title: "SAMPLE — Front Bumper Cover",
       category: "Body",
       make_compat: "Toyota",
-      model_compat: "RAV4 2013-2018",
+      model_compat: "RAV4",
+      year_compat: 2016,
+      fuel_type: "hybrid",
       condition_note: "Used — minor scuffs",
       price: 140,
       quantity: 1,
@@ -123,11 +136,26 @@ if (partCount === 0) {
       title: "SAMPLE — OEM Headlight Assembly (Pair)",
       category: "Lighting",
       make_compat: "Ford",
-      model_compat: "F-150 2009-2014",
+      model_compat: "F-150",
+      year_compat: 2012,
+      fuel_type: "gas",
       condition_note: "OEM — used",
       price: 220,
       quantity: 2,
       description: "Placeholder listing.",
+      image_url: "/assets/placeholder-part.svg",
+    },
+    {
+      title: "SAMPLE — EV Drive Battery Module",
+      category: "Electrical",
+      make_compat: "Nissan",
+      model_compat: "Leaf",
+      year_compat: 2019,
+      fuel_type: "ev",
+      condition_note: "used",
+      price: 650,
+      quantity: 1,
+      description: "Placeholder listing — shows what a community Parts Seller listing looks like (new/used condition wording, EV fuel type).",
       image_url: "/assets/placeholder-part.svg",
     },
   ];

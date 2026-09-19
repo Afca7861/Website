@@ -114,7 +114,7 @@ function withDefaults(data, fields, existing) {
 
 const vehicleFields = [
   "category", "title", "price", "year", "make", "model",
-  "mileage", "condition_note", "description", "image_url", "tags",
+  "mileage", "condition_note", "body_type", "description", "image_url", "tags",
 ];
 
 router.get("/vehicles", (req, res) => {
@@ -127,8 +127,8 @@ router.post("/vehicles", (req, res) => {
     return res.status(400).json({ error: "Title and a valid category ('local' or 'export') are required." });
   }
   const info = db.prepare(`
-    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, description, image_url, tags)
-    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @description, @image_url, @tags)
+    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, body_type, description, image_url, tags)
+    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @body_type, @description, @image_url, @tags)
   `).run(data);
   res.status(201).json({ vehicle: db.prepare("SELECT * FROM vehicles WHERE id = ?").get(info.lastInsertRowid) });
 });
@@ -139,7 +139,7 @@ router.put("/vehicles/:id", (req, res) => {
   const data = withDefaults(pick(req.body, vehicleFields), vehicleFields, existing);
   db.prepare(`
     UPDATE vehicles SET category=@category, title=@title, price=@price, year=@year, make=@make, model=@model,
-      mileage=@mileage, condition_note=@condition_note, description=@description, image_url=@image_url, tags=@tags
+      mileage=@mileage, condition_note=@condition_note, body_type=@body_type, description=@description, image_url=@image_url, tags=@tags
     WHERE id=@id
   `).run({ ...data, id: req.params.id });
   res.json({ vehicle: db.prepare("SELECT * FROM vehicles WHERE id = ?").get(req.params.id) });
@@ -184,7 +184,11 @@ router.put("/parts/:id", (req, res) => {
 });
 
 router.delete("/parts/:id", (req, res) => {
-  db.prepare("DELETE FROM parts WHERE id = ?").run(req.params.id);
+  const tx = db.transaction(() => {
+    db.prepare("DELETE FROM part_images WHERE part_id = ?").run(req.params.id);
+    db.prepare("DELETE FROM parts WHERE id = ?").run(req.params.id);
+  });
+  tx();
   res.json({ ok: true });
 });
 

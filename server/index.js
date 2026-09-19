@@ -14,6 +14,7 @@ const authRoutes = require("./routes/auth");
 const listingsRoutes = require("./routes/listings");
 const auctionsRoutes = require("./routes/auctions");
 const adminRoutes = require("./routes/admin");
+const sellerRoutes = require("./routes/seller");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -110,6 +111,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", listingsRoutes);
 app.use("/api", auctionsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/seller", sellerRoutes);
 
 // One-time (safe to leave set) admin bootstrap: if ADMIN_BOOTSTRAP_EMAIL is
 // set and a registered account matches it, grant that account the 'admin'

@@ -8,18 +8,20 @@ const db = require("../db");
 const router = express.Router();
 
 const insertUser = db.prepare(`
-  INSERT INTO users (name, email, password_hash, buyer_type)
-  VALUES (@name, @email, @password_hash, @buyer_type)
+  INSERT INTO users (name, email, password_hash, buyer_type, phone, is_seller)
+  VALUES (@name, @email, @password_hash, @buyer_type, @phone, @is_seller)
 `);
 const findByEmail = db.prepare("SELECT * FROM users WHERE email = ?");
-const findById = db.prepare("SELECT id, name, email, buyer_type, role, created_at FROM users WHERE id = ?");
+const findById = db.prepare(
+  "SELECT id, name, email, buyer_type, role, phone, is_seller, created_at FROM users WHERE id = ?"
+);
 
 function isValidEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, buyer_type } = req.body || {};
+  const { name, email, password, buyer_type, become_seller, phone } = req.body || {};
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: "Name, email, and password are required." });
@@ -31,6 +33,10 @@ router.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Password must be at least 8 characters." });
   }
   const normalizedBuyerType = ["local", "trade", "overseas"].includes(buyer_type) ? buyer_type : "local";
+  const wantsSeller = become_seller === true || become_seller === "true" || become_seller === "on";
+  if (wantsSeller && !String(phone || "").trim()) {
+    return res.status(400).json({ error: "A contact phone number is required to register as a Parts Seller." });
+  }
 
   const existing = findByEmail.get(email.toLowerCase().trim());
   if (existing) {
@@ -45,6 +51,8 @@ router.post("/register", async (req, res) => {
       email: email.toLowerCase().trim(),
       password_hash,
       buyer_type: normalizedBuyerType,
+      phone: phone ? String(phone).trim() : null,
+      is_seller: wantsSeller ? 1 : 0,
     });
     req.session.userId = info.lastInsertRowid;
     const user = findById.get(info.lastInsertRowid);
@@ -53,6 +61,23 @@ router.post("/register", async (req, res) => {
     console.error("Registration error:", err);
     res.status(500).json({ error: "Could not create account. Please try again." });
   }
+});
+
+// Lets an already-registered member register as a Parts Seller later,
+// from /account.html, without creating a second account. Requires a
+// contact phone number (used as the default contact on new listings —
+// each listing can still override it).
+router.post("/become-seller", (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: "Please log in first." });
+  const { phone } = req.body || {};
+  if (!String(phone || "").trim()) {
+    return res.status(400).json({ error: "A contact phone number is required to register as a Parts Seller." });
+  }
+  db.prepare("UPDATE users SET is_seller = 1, phone = ? WHERE id = ?").run(
+    String(phone).trim(),
+    req.session.userId
+  );
+  res.json({ user: findById.get(req.session.userId) });
 });
 
 router.post("/login", async (req, res) => {

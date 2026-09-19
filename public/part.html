@@ -10,6 +10,19 @@
 
 </head>
 <body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span>Surrey, BC</span>
+      <span>Mon–Sat: <span class="todo-flag">[TODO: confirm hours]</span></span>
+    </div>
+    <div class="topbar-right">
+      <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener">Facebook</a>
+      <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a>
+    </div>
+  </div>
+</div>
+
 <header class="site-header">
   <div class="header-inner">
     <a class="brand" href="/index.html">
@@ -20,6 +33,8 @@
       <a href="/index.html" data-nav="home">Home</a>
       <a href="/cars.html" data-nav="cars">Used Cars</a>
       <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/sell-parts.html" data-nav="sell-parts">Sell Parts</a>
+      <a href="/payment-calculator.html" data-nav="payment-calculator">Payment Calculator</a>
       <a href="/export.html" data-nav="export">Ship Cars</a>
       <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
       <a href="/about.html" data-nav="about">About</a>
@@ -69,6 +84,24 @@
 <script src="/js/main.js"></script>
 
 <script>
+const PART_DETAIL_FUEL_LABELS = { gas: "Gas", hybrid: "Hybrid", ev: "EV" };
+const PART_DETAIL_CONDITION_LABELS = { new: "New", used: "Used" };
+
+function partGallery(images, title) {
+  const list = images && images.length ? images : ["/assets/placeholder-part.svg"];
+  const main = `<img id="part-main-photo" src="${escapeHtml(list[0])}" alt="${escapeHtml(title)}" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover;">`;
+  if (list.length <= 1) return main;
+  const thumbs = list
+    .map(
+      (url, i) => `<img src="${escapeHtml(url)}" data-thumb="${i}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ${i === 0 ? "var(--afca-red)" : "transparent"};">`
+    )
+    .join("");
+  return `
+    ${main}
+    <div id="part-thumbs" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">${thumbs}</div>
+  `;
+}
+
 async function loadPartDetail() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
@@ -77,18 +110,48 @@ async function loadPartDetail() {
   try {
     const { part } = await apiFetch(`/api/parts/${encodeURIComponent(id)}`);
     document.title = part.title + " | AFCA Auto Sales Ltd.";
+    const fits = [part.year_compat, part.make_compat, part.model_compat].filter(Boolean).join(" ");
+    const fuelLabel = part.fuel_type ? (PART_DETAIL_FUEL_LABELS[part.fuel_type] || part.fuel_type) : null;
+    const conditionLabel = part.condition_note
+      ? (PART_DETAIL_CONDITION_LABELS[part.condition_note] || part.condition_note)
+      : null;
+    const contactBlock = part.contact_phone || part.contact_email
+      ? `
+        <div style="border:1px solid var(--afca-gray-200);border-radius:8px;padding:14px 16px;margin-top:16px;">
+          <h3 class="mt-0" style="font-size:16px;">Contact the seller</h3>
+          ${part.seller ? `<p class="muted" style="margin-bottom:8px;">Listed by ${escapeHtml(part.seller.name)}</p>` : ""}
+          ${part.contact_phone ? `<p style="margin-bottom:6px;"><a class="btn btn-primary" href="tel:${escapeHtml(part.contact_phone)}">Call ${escapeHtml(part.contact_phone)}</a></p>` : ""}
+          ${part.contact_email ? `<p style="margin-bottom:0;"><a class="btn btn-outline" href="mailto:${escapeHtml(part.contact_email)}">Email ${escapeHtml(part.contact_email)}</a></p>` : ""}
+        </div>
+      `
+      : `<a class="btn btn-primary" href="/contact.html">Inquire about this part</a>`;
+
     target.innerHTML = `
       <div class="detail-grid">
-        <img src="${escapeHtml(part.image_url || '/assets/placeholder-part.svg')}" alt="${escapeHtml(part.title)}" style="width:100%;border-radius:10px;">
+        <div>${partGallery(part.images, part.title)}</div>
         <div>
+          <span class="badge badge-gray">${escapeHtml(conditionLabel || "Condition n/a")}</span>
+          ${fuelLabel ? `<span class="badge badge-green">${escapeHtml(fuelLabel)}</span>` : ""}
+          ${part.status === "sold" ? `<span class="badge badge-red">Sold</span>` : ""}
           <h1>${escapeHtml(part.title)}</h1>
           <p class="price" style="font-family:var(--heading-font);font-size:28px;color:var(--afca-red);">${money(part.price)}</p>
-          <p class="specs muted">Fits: ${escapeHtml(part.make_compat || "")} ${escapeHtml(part.model_compat || "")} · Condition: ${escapeHtml(part.condition_note || "")} · Qty available: ${part.quantity ?? "n/a"}</p>
+          <p class="specs muted">${fits ? "Fits: " + escapeHtml(fits) : "Fit not specified"} · Qty available: ${part.quantity ?? "n/a"}</p>
           <p>${escapeHtml(part.description || "")}</p>
-          <a class="btn btn-primary" href="/contact.html">Inquire about this part</a>
+          ${contactBlock}
         </div>
       </div>
     `;
+
+    const thumbsEl = qs("#part-thumbs");
+    if (thumbsEl) {
+      qsa("img[data-thumb]", thumbsEl).forEach((img) => {
+        img.addEventListener("click", () => {
+          qs("#part-main-photo").src = img.src;
+          qsa("img[data-thumb]", thumbsEl).forEach((t) => (t.style.borderColor = "transparent"));
+          img.style.borderColor = "var(--afca-red)";
+        });
+      });
+    }
   } catch (err) {
     target.innerHTML = `<p class="form-error">${escapeHtml(err.message)}</p>`;
   }

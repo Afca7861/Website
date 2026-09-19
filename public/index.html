@@ -10,6 +10,19 @@
 
 </head>
 <body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span>Surrey, BC</span>
+      <span>Mon–Sat: <span class="todo-flag">[TODO: confirm hours]</span></span>
+    </div>
+    <div class="topbar-right">
+      <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener">Facebook</a>
+      <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a>
+    </div>
+  </div>
+</div>
+
 <header class="site-header">
   <div class="header-inner">
     <a class="brand" href="/index.html">
@@ -20,6 +33,8 @@
       <a href="/index.html" data-nav="home">Home</a>
       <a href="/cars.html" data-nav="cars">Used Cars</a>
       <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/sell-parts.html" data-nav="sell-parts">Sell Parts</a>
+      <a href="/payment-calculator.html" data-nav="payment-calculator">Payment Calculator</a>
       <a href="/export.html" data-nav="export">Ship Cars</a>
       <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
       <a href="/about.html" data-nav="about">About</a>
@@ -30,14 +45,19 @@
 </header>
 
 
-<section class="site-banner" id="site-banner">
-  <div class="site-banner-actions">
-    <a class="btn btn-outline btn-invert" href="/cars.html">Browse Inventory</a>
-    <a class="btn btn-outline btn-invert" href="/auctions.html">View Auction Feed</a>
-  </div>
-  <div class="container site-banner-inner">
-    <h1 id="banner-headline">Honest deals on used cars, parts, and export vehicles.</h1>
-    <p id="banner-subtext">Serving Surrey and the Lower Mainland with reliable pre-owned vehicles, plus a parts marketplace for mechanics and dealers, and salvage/export vehicles shipped worldwide.</p>
+<div id="hero-slider"></div>
+
+<section class="quick-search">
+  <div class="container">
+    <div class="quick-search-label">Quick search by body type</div>
+    <div class="quick-search-chips">
+      <a class="chip" href="/cars.html?body_type=SUV">SUV</a>
+      <a class="chip" href="/cars.html?body_type=Sedan">Sedan</a>
+      <a class="chip" href="/cars.html?body_type=Hatchback">Hatchback</a>
+      <a class="chip" href="/cars.html?body_type=Wagon">Wagon</a>
+      <a class="chip" href="/cars.html?body_type=Minivan">Mini-Van</a>
+      <a class="chip" href="/cars.html?body_type=Truck">Pickup</a>
+    </div>
   </div>
 </section>
 
@@ -103,6 +123,12 @@
         <p class="muted">Salvage-title and dismantled vehicles shipped to Eastern Europe, Africa, the Middle East, and beyond, with full documentation.</p>
         <a class="btn btn-outline" href="/export.html">Browse export inventory</a>
       </div>
+      <div class="pitch-card">
+        <span class="badge badge-green">Free tool</span>
+        <h3>Payment Calculator</h3>
+        <p class="muted">Estimate your monthly payment on any vehicle before you visit — just enter the price, down payment, and term.</p>
+        <a class="btn btn-outline" href="/payment-calculator.html">Calculate payments</a>
+      </div>
     </div>
   </div>
 </section>
@@ -138,11 +164,11 @@
 </footer>
 
 <script src="/js/main.js"></script>
+<script src="/js/hero-slider.js"></script>
 <script src="/js/carousel.js"></script>
 <script src="/js/auctions.js"></script>
 <script src="/js/listings.js"></script>
-<script src="/js/banner.js"></script>
 <script src="/js/search.js"></script>
-<script>loadHeroCarousel("#hero-carousel"); loadAuctions("#hero-auctions", 4);</script>
+<script>loadHeroSlider("#hero-slider"); loadHeroCarousel("#hero-carousel"); loadAuctions("#hero-auctions", 4);</script>
 </body>
 </html>

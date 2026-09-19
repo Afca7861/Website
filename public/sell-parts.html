@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sell Parts | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="Register as an AFCA Parts Seller and list your own car parts for the community to find.">
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <span>Surrey, BC</span>
+      <span>Mon–Sat: <span class="todo-flag">[TODO: confirm hours]</span></span>
+    </div>
+    <div class="topbar-right">
+      <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener">Facebook</a>
+      <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="/index.html">
+      <img src="/assets/logo.svg" alt="AFCA Auto Sales Ltd.">
+    </a>
+    <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/cars.html" data-nav="cars">Used Cars</a>
+      <a href="/parts.html" data-nav="parts">Car Parts</a>
+      <a href="/sell-parts.html" data-nav="sell-parts">Sell Parts</a>
+      <a href="/payment-calculator.html" data-nav="payment-calculator">Payment Calculator</a>
+      <a href="/export.html" data-nav="export">Ship Cars</a>
+      <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
+      <a href="/about.html" data-nav="about">About</a>
+      <a href="/contact.html" data-nav="contact">Contact</a>
+    </nav>
+    <div class="header-actions" id="header-auth"></div>
+  </div>
+</header>
+
+<section class="page-hero container">
+  <h1>Sell Parts</h1>
+  <p class="muted">List your own car parts for local mechanics, DIYers, and other community members to find and search.</p>
+</section>
+
+<section class="container stack-lg" id="sell-parts-app" style="padding-bottom:48px;">
+  <div id="sp-guard"><p class="muted">Loading…</p></div>
+
+  <div id="sp-onboarding" hidden style="max-width:420px;">
+    <div style="border:1px solid var(--afca-gray-200);border-radius:8px;padding:16px 18px;">
+      <h3 class="mt-0">Register as a Parts Seller</h3>
+      <p class="muted">One quick step — a contact phone number so buyers can reach you. You can add/edit this later.</p>
+      <div id="sp-onboard-message"></div>
+      <form id="sp-onboard-form" class="stack">
+        <div>
+          <label for="sp-onboard-phone">Contact phone number</label>
+          <input id="sp-onboard-phone" name="phone" type="tel" required placeholder="(604) 555-0100">
+        </div>
+        <button class="btn btn-primary" type="submit">Register as a Parts Seller</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="sp-dashboard" hidden>
+    <div class="admin-panel">
+      <h2 id="sp-form-heading">List a new part</h2>
+      <div id="sp-form-message"></div>
+      <form id="sp-part-form" class="admin-form">
+        <div>
+          <label for="sp-title">Part name</label>
+          <input id="sp-title" name="title" type="text" required placeholder="e.g. Alternator">
+        </div>
+        <div>
+          <label for="sp-price">Price (CAD)</label>
+          <input id="sp-price" name="price" type="number" min="0" step="1" placeholder="120">
+        </div>
+        <div>
+          <label for="sp-make">Vehicle make</label>
+          <input id="sp-make" name="make_compat" type="text" placeholder="e.g. Honda">
+        </div>
+        <div>
+          <label for="sp-model">Vehicle model</label>
+          <input id="sp-model" name="model_compat" type="text" placeholder="e.g. Civic">
+        </div>
+        <div>
+          <label for="sp-year">Vehicle year</label>
+          <input id="sp-year" name="year_compat" type="number" min="1950" max="2100" placeholder="e.g. 2015">
+        </div>
+        <div>
+          <label for="sp-fuel">Fuel / power type</label>
+          <select id="sp-fuel" name="fuel_type">
+            <option value="">Select…</option>
+            <option value="gas">Gas</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="ev">EV</option>
+          </select>
+        </div>
+        <div>
+          <label for="sp-condition">Condition</label>
+          <select id="sp-condition" name="condition_note">
+            <option value="">Select…</option>
+            <option value="new">New</option>
+            <option value="used">Used</option>
+          </select>
+        </div>
+        <div>
+          <label for="sp-quantity">Quantity available</label>
+          <input id="sp-quantity" name="quantity" type="number" min="1" step="1" value="1">
+        </div>
+        <div>
+          <label for="sp-contact-phone">Contact phone for this listing</label>
+          <input id="sp-contact-phone" name="contact_phone" type="tel" placeholder="(604) 555-0100">
+        </div>
+        <div>
+          <label for="sp-contact-email">Contact email for this listing</label>
+          <input id="sp-contact-email" name="contact_email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="field-full">
+          <label for="sp-description">Description</label>
+          <textarea id="sp-description" name="description" rows="4" placeholder="Condition details, part number, why you're selling, etc."></textarea>
+        </div>
+        <div class="field-full">
+          <label for="sp-photos">Photos (up to 8)</label>
+          <input id="sp-photos" name="photos" type="file" accept="image/*" multiple>
+          <div id="sp-photo-previews" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+        </div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" id="sp-submit" type="submit">Add listing</button>
+          <button class="btn btn-outline" id="sp-cancel" type="button" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      <h2>My listings</h2>
+      <div id="sp-table-wrap" class="admin-table-wrap"><p class="muted">Loading…</p></div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <h3>AFCA Auto Sales Ltd.</h3>
+      <p>13211 King George Blvd<br>Surrey, BC, Canada V3T 2T3</p>
+      <p>Email: <a href="mailto:sales@afcaauto.ca">sales@afcaauto.ca</a><br>
+      Phone: <span class="todo-flag">[TODO: add phone number]</span><br>
+      Hours: <span class="todo-flag">[TODO: confirm hours]</span></p>
+    </div>
+    <div>
+      <h3>Explore</h3>
+      <p>
+        <a href="/cars.html">Used Cars</a><br>
+        <a href="/parts.html">Car Parts</a><br>
+        <a href="/export.html">Export / Salvage Vehicles</a><br>
+        <a href="/auctions.html">Daily Auction Feed</a>
+      </p>
+    </div>
+    <div>
+      <h3>Follow AFCA</h3>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/AFCAAutoSalesLtd/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+        <a href="#" class="todo-flag" title="TODO: add Twitter/X handle" aria-label="Twitter/X">X</a>
+        <a href="#" class="todo-flag" title="TODO: add Instagram handle" aria-label="Instagram">IG</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-bottom">&copy; <span id="footer-year"></span> AFCA Auto Sales Ltd. All rights reserved.</p>
+</footer>
+
+<script src="/js/main.js"></script>
+<script src="/js/sell-parts.js"></script>
+</body>
+</html>

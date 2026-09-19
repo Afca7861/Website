@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Salvage & Export Vehicles | AFCA Auto Sales Ltd.</title>
-<meta name="description" content="Salvage-title and dismantled vehicles from AFCA Auto Sales, shipped worldwide.">
+<title>Payment Calculator | AFCA Auto Sales Ltd.</title>
+<meta name="description" content="Estimate your monthly car payment before you visit AFCA Auto Sales — enter the price, down payment, trade-in, and term.">
 <link rel="icon" href="/assets/logo.svg">
 <link rel="stylesheet" href="/css/style.css">
 
@@ -44,14 +44,55 @@
   </div>
 </header>
 
-
 <section class="page-hero container">
-  <h1>Salvage &amp; Export Vehicles</h1>
-  <p class="muted">AFCA sells salvage-title and dismantled vehicles for export, primarily to buyers in Eastern Europe, Africa, and the Middle East — and beyond. We provide the documentation needed for overseas import and can advise on container shipping.</p>
-  <p class="helptext">Buyers outside Canada: use the inquiry form on a listing and include your country and preferred contact method (WhatsApp works well) — someone from AFCA will follow up with shipping and documentation details.</p>
+  <h1>Payment Calculator</h1>
+  <p class="muted">Estimate your monthly payment before you visit — this is a planning estimate only, not a financing offer.</p>
 </section>
-<section class="container">
-  <div id="export-grid" class="grid"></div>
+
+<section class="container" style="padding-bottom:56px;">
+  <div class="calc-grid">
+    <form class="calc-form" id="calc-form">
+      <div class="field">
+        <label for="calc-price">Vehicle price (CAD)</label>
+        <input id="calc-price" name="price" type="number" min="0" step="100" value="15000">
+      </div>
+      <div class="field">
+        <label for="calc-down">Down payment (CAD)</label>
+        <input id="calc-down" name="down_payment" type="number" min="0" step="100" value="2000">
+      </div>
+      <div class="field">
+        <label for="calc-trade">Trade-in value (CAD)</label>
+        <input id="calc-trade" name="trade_in" type="number" min="0" step="100" value="0">
+      </div>
+      <div class="field">
+        <label for="calc-apr">Interest rate — APR (%)</label>
+        <input id="calc-apr" name="apr" type="number" min="0" max="30" step="0.1" value="7.9">
+      </div>
+      <div class="field">
+        <label for="calc-term">Loan term</label>
+        <select id="calc-term" name="term">
+          <option value="24">24 months</option>
+          <option value="36">36 months</option>
+          <option value="48">48 months</option>
+          <option value="60" selected>60 months</option>
+          <option value="72">72 months</option>
+          <option value="84">84 months</option>
+        </select>
+      </div>
+      <p class="helptext">Figures update automatically as you type.</p>
+    </form>
+
+    <div class="calc-result" id="calc-result">
+      <div class="muted" style="color:rgba(255,255,255,0.75);font-size:13px;text-transform:uppercase;letter-spacing:0.05em;">Estimated payment</div>
+      <div class="calc-monthly"><span id="calc-monthly-value">$0</span><span>/mo</span></div>
+      <div class="calc-breakdown">
+        <div><span>Amount financed</span><strong id="calc-principal">$0</strong></div>
+        <div><span>Total interest</span><strong id="calc-interest">$0</strong></div>
+        <div><span>Total of payments</span><strong id="calc-total">$0</strong></div>
+      </div>
+      <p class="calc-disclaimer" style="color:rgba(255,255,255,0.6);">Estimate only — actual rate and payment depend on credit approval, taxes, and fees. <a href="/contact.html" style="color:#fff;text-decoration:underline;">Contact us</a> for a real quote.</p>
+    </div>
+  </div>
 </section>
 
 <footer class="site-footer">
@@ -69,7 +110,8 @@
         <a href="/cars.html">Used Cars</a><br>
         <a href="/parts.html">Car Parts</a><br>
         <a href="/export.html">Export / Salvage Vehicles</a><br>
-        <a href="/auctions.html">Daily Auction Feed</a>
+        <a href="/auctions.html">Daily Auction Feed</a><br>
+        <a href="/payment-calculator.html">Payment Calculator</a>
       </p>
     </div>
     <div>
@@ -85,7 +127,6 @@
 </footer>
 
 <script src="/js/main.js"></script>
-<script src="/js/listings.js"></script>
-<script>loadVehicleGrid("#export-grid", "export");</script>
+<script src="/js/payment-calculator.js"></script>
 </body>
 </html>

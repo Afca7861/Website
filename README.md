@@ -24,6 +24,50 @@ Built by three roles, as requested:
   (colors, typography, layout rules, logo)
 - **Website Software Programmer:** everything under `server/` and `public/`
 
+## Sept 2026 — visual redesign (Soni Motors-inspired)
+
+The site's look was refreshed to read as a more polished, professional
+dealer storefront, using [sonimotors.ca](https://www.sonimotors.ca/) as a
+design reference. This was a **visual/feature refresh, not a rebuild** —
+every existing page, route, and piece of data still works exactly as
+before; nothing was removed.
+
+What changed:
+
+- **New color palette & type.** A deep navy (`--afca-navy`) joins the
+  existing blue/red/green brand colors for the header topbar, footer, and
+  hero overlay — Soni's "dark navigation, bright content" feel. Headings
+  now use Poppins and body text Inter (via Google Fonts), replacing the
+  old system-font stack. See `public/css/style.css`.
+- **Utility topbar.** A slim dark bar above the header on every page
+  (location, hours, Facebook, email) — same pattern as Soni's top bar.
+  Hours are still a `[TODO]` placeholder until AFCA confirms them (same
+  convention as the phone number already flagged elsewhere).
+- **Homepage hero slider.** Replaces the old single static banner with a
+  3-slide rotating promo (`public/js/hero-slider.js`): Slide 1 is still
+  driven by the admin-editable Site Banner settings (Admin panel → Site
+  Banner tab — nothing an admin already set was lost), slides 2–3 promote
+  the Parts Marketplace and Export/Ship Cars lines. Auto-rotates, pauses
+  on hover, has prev/next + dot controls.
+- **Quick-search by body type.** A row of chips under the homepage hero
+  (SUV, Sedan, Hatchback, Wagon, Mini-Van, Pickup) that jump straight into
+  a filtered `/cars.html?body_type=...` view — mirrors Soni's quick-search
+  row. `cars.html` also got its own full filter bar (body type, condition,
+  year, make, model). This required a small schema addition:
+  `vehicles.body_type` (nullable `TEXT`, migrated automatically on
+  startup same as every other column added since launch — see
+  `ensureColumn()` in `server/db.js`). The admin panel's Local Cars and
+  Export/Salvage forms now have a Body Type dropdown.
+- **Payment calculator.** New `/payment-calculator.html` — a simple,
+  fully client-side loan estimator (price, down payment, trade-in, APR,
+  term → estimated monthly payment), linked from the nav and the
+  homepage. Nothing here is saved or sent to the server; it's a planning
+  tool only, with a disclaimer to contact AFCA for a real quote.
+
+Nothing about the account/auth model, the Parts Seller portal, the admin
+panel's other sections, or the auction-gating behavior changed — this was
+purely the presentation layer plus the three additions above.
+
 ## Important — read before you deploy
 
 **I could not run `npm install` or start the server inside the sandbox that
@@ -109,6 +153,57 @@ persistent disk and follow "Persistent storage on Render" below (or move
 photo storage to something like Cloudinary/S3 instead — ask me and I can
 wire that in).
 
+## Community Parts Seller portal
+
+Beyond the admin-managed parts catalog, any registered member can now
+register as a **Parts Seller** and list their own car parts directly —
+no admin involvement needed to post a listing.
+
+**Becoming a seller:**
+- At sign-up, check "I want to register as a Parts Seller too" on
+  `/register.html` and add a contact phone number, or
+- Any time later, from `/account.html` → "Become a Parts Seller" (also just
+  a phone number).
+
+**The seller dashboard — `/sell-parts.html`:** once registered as a seller,
+this page lets a member:
+- Add a new part listing: part name, vehicle make/model/year, fuel/power
+  type (Gas / Hybrid / EV), price, condition (New / Used), quantity, a
+  description, up to 8 photos, and a contact phone + email for that
+  specific listing (defaults to the account's phone/email, editable per
+  listing).
+- See all of their own listings in a table, edit any of them, mark one
+  "sold" (hides it from search without deleting it — flip it back to
+  active any time), or delete it outright.
+- A seller can only ever see and edit their own listings — every
+  `/api/seller/*` route re-checks `seller_id` against the logged-in
+  session server-side (see `server/routes/seller.js`).
+
+**Visitor search — `/parts.html`:** the Car Parts Marketplace page now has
+a full search/filter bar (keyword, make, model, year, fuel/power type,
+condition) built from whatever's actually in the `parts` table
+(`GET /api/parts/facets`), so it covers both admin-posted parts and
+community seller listings in one combined catalog. The part detail page
+(`/part.html`) shows a full photo gallery and a "Contact the seller" block
+with tap-to-call / tap-to-email links built from that listing's contact
+info.
+
+**Moderation:** seller-submitted listings are not held for approval — they
+go live immediately, the same way a community marketplace normally works.
+They *do* still show up in `/admin.html`'s Parts tab alongside admin-posted
+ones, so an admin can edit or delete any listing (including a seller's) if
+something needs to come down. If you'd rather listings wait for admin
+approval before going live, that's a small addition to `server/routes/
+seller.js` (default new listings to a `pending` status and filter those out
+of the public `/api/parts` query) — ask and I can wire it in.
+
+**Data model note:** parts can now have multiple photos (`part_images`
+table) in addition to the original single `image_url` column, which is
+kept in sync as a "primary photo" so older code that only knows about
+`image_url` keeps working. `server/db.js` adds the new columns/table to an
+existing `data/afca.db` automatically on next startup — no manual
+migration step, existing listings are untouched.
+
 ## Persistent storage on Render
 
 Once you're on a paid Render plan (persistent disks aren't available on
@@ -183,23 +278,29 @@ other options, roughly in order of effort:
 ```
 server/
   index.js        Express app entry point (sessions, static files, routes)
-  db.js           SQLite schema (users, vehicles, parts, auctions)
+  db.js           SQLite schema (users, vehicles, parts, part_images, auctions)
   seed.js         Inserts sample listings on first run (run: npm run seed)
   routes/
-    auth.js       /api/auth/register, /login, /logout, /me
-    listings.js   /api/vehicles, /api/parts (public, read-only)
+    auth.js       /api/auth/register, /login, /logout, /me, /become-seller
+    listings.js   /api/vehicles, /api/parts + /api/parts/facets (public, read-only, search/filter)
     auctions.js   /api/auctions (gates auction_url server-side by login state)
     admin.js      /api/admin/* — listing CRUD + photo upload, admin-only
+    seller.js     /api/seller/* — a seller's OWN part listings + photo upload (see "Community Parts Seller portal")
 public/
   index.html, cars.html, parts.html, export.html, auctions.html,
   vehicle.html, part.html, register.html, login.html, account.html,
+  sell-parts.html   Community Parts Seller dashboard (see below)
+  payment-calculator.html   Client-side loan/payment estimator (see redesign notes above)
   about.html, contact.html, 404.html
   admin.html, admin-login.html   Admin panel (see "Admin panel" below)
   css/style.css   Design system implemented as CSS custom properties
-  js/             main.js (nav + auth header), carousel.js, listings.js,
+  js/             main.js (nav + auth header), hero-slider.js (homepage promo slider),
+                  carousel.js, listings.js, cars-search.js (Used Cars filter bar),
+                  search.js (homepage vehicle search), parts-search.js (parts search),
+                  sell-parts.js (seller dashboard), payment-calculator.js,
                   auctions.js, admin.js
   assets/         logo.svg + placeholder images
-  uploads/        Photos uploaded through the admin panel (gitignored)
+  uploads/        Photos uploaded through the admin panel or seller portal (gitignored)
 docs/
   outline.md          Tarrah's sitemap & content plan
   design-system.md    Color palette, typography, layout rules
