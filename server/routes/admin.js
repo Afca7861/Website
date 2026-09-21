@@ -12,6 +12,7 @@ const path = require("path");
 const multer = require("multer");
 const db = require("../db");
 const { uploadsDir } = require("../paths");
+const paypal = require("../lib/paypal");
 
 const router = express.Router();
 
@@ -304,7 +305,7 @@ router.get("/users", (req, res) => {
   res.json({
     users: db
       .prepare(
-        `SELECT id, name, email, phone, buyer_type, role, is_seller, status, created_at
+        `SELECT id, name, email, phone, buyer_type, role, is_seller, paypal_email, postal_code, status, created_at
          FROM users
          ORDER BY created_at DESC`
       )
@@ -358,6 +359,56 @@ router.delete("/users/:id", (req, res) => {
   } catch (err) {
     console.error("Delete customer error:", err);
     res.status(500).json({ error: "Could not remove this customer. Please try again." });
+  }
+});
+
+// ---- Orders (Car Parts checkout — see server/routes/orders.js) ----
+
+router.get("/orders", (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT o.*, u.name AS seller_name, u.email AS seller_email, u.paypal_email AS seller_paypal_email
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.seller_id
+       ORDER BY o.created_at DESC`
+    )
+    .all();
+  res.json({ orders: rows });
+});
+
+// Re-attempts a failed seller payout (order.status = 'payout_failed') —
+// the buyer's payment already succeeded and is never touched here; this
+// only retries the PayPal Payouts call that sends the seller their 95%.
+// Safe to click more than once: PayPal Payouts is idempotent per
+// sender_batch_id, and a fresh id is generated per attempt below so a
+// retry after e.g. the seller fixed a typo'd PayPal email actually sends.
+router.post("/orders/:id/retry-payout", async (req, res) => {
+  const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
+  if (!order) return res.status(404).json({ error: "Order not found." });
+  if (order.status !== "payout_failed") {
+    return res.status(400).json({ error: "This order isn't in a failed-payout state." });
+  }
+  if (!(order.seller_payout > 0) || !order.seller_id) {
+    return res.status(400).json({ error: "This order has no seller payout to retry." });
+  }
+  const seller = db.prepare("SELECT paypal_email FROM users WHERE id = ?").get(order.seller_id);
+  if (!seller || !seller.paypal_email) {
+    return res.status(400).json({ error: "This seller still doesn't have a PayPal email on file — ask them to add one first." });
+  }
+  try {
+    const payout = await paypal.sendPayout({
+      receiverEmail: seller.paypal_email,
+      amount: order.seller_payout,
+      currency: "CAD",
+      note: `Payout for "${order.part_title}" sold on afcaauto.ca (order #${order.id})`,
+      senderBatchId: `afca-order-${order.id}-retry-${Date.now()}`,
+      senderItemId: `order-${order.id}-retry`,
+    });
+    db.prepare("UPDATE orders SET payout_batch_id = ?, status = 'paid' WHERE id = ?").run(payout.batchId, order.id);
+    res.json({ order: db.prepare("SELECT * FROM orders WHERE id = ?").get(order.id) });
+  } catch (err) {
+    console.error(`Retry payout failed for order ${order.id}:`, err.message);
+    res.status(502).json({ error: "PayPal rejected the payout again: " + err.message });
   }
 });
 

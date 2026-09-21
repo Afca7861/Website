@@ -51,6 +51,45 @@ router.use(requireSeller);
 
 router.get("/check", (req, res) => res.json({ ok: true, user: req.sellerUser }));
 
+function isValidEmail(email) {
+  return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Lets a seller update their payout PayPal email / phone / postal code
+// later (e.g. they made a typo at signup, or want payouts to go somewhere
+// else) without re-registering. All three are required — a blank PayPal
+// email would silently stop future sales from paying out at all.
+router.put("/payout-info", (req, res) => {
+  const { phone, paypal_email, postal_code } = req.body || {};
+  if (!String(phone || "").trim()) return res.status(400).json({ error: "A contact phone number is required." });
+  if (!isValidEmail(paypal_email)) return res.status(400).json({ error: "A valid PayPal email is required." });
+  if (!String(postal_code || "").trim()) return res.status(400).json({ error: "A postal code is required." });
+  db.prepare("UPDATE users SET phone = ?, paypal_email = ?, postal_code = ? WHERE id = ?").run(
+    String(phone).trim(),
+    String(paypal_email).trim().toLowerCase(),
+    String(postal_code).trim(),
+    req.sellerUser.id
+  );
+  res.json({
+    user: db
+      .prepare("SELECT id, name, email, phone, paypal_email, postal_code, is_seller FROM users WHERE id = ?")
+      .get(req.sellerUser.id),
+  });
+});
+
+// This seller's sales — what sold, for how much, and whether their payout
+// went through, so they don't have to ask AFCA to find out.
+router.get("/orders", (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT id, part_id, part_title, part_price, fulfillment_method, shipping_fee, seller_payout,
+              status, created_at
+       FROM orders WHERE seller_id = ? ORDER BY created_at DESC`
+    )
+    .all(req.sellerUser.id);
+  res.json({ orders: rows });
+});
+
 // Multiple photos in one request — used by the "Add a part" form. Returns
 // the uploaded URLs in the same order the files were sent.
 router.post("/upload", (req, res) => {

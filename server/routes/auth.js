@@ -8,12 +8,12 @@ const db = require("../db");
 const router = express.Router();
 
 const insertUser = db.prepare(`
-  INSERT INTO users (name, email, password_hash, buyer_type, phone, is_seller, status)
-  VALUES (@name, @email, @password_hash, @buyer_type, @phone, @is_seller, 'pending')
+  INSERT INTO users (name, email, password_hash, buyer_type, phone, is_seller, paypal_email, postal_code, status)
+  VALUES (@name, @email, @password_hash, @buyer_type, @phone, @is_seller, @paypal_email, @postal_code, 'pending')
 `);
 const findByEmail = db.prepare("SELECT * FROM users WHERE email = ?");
 const findById = db.prepare(
-  "SELECT id, name, email, buyer_type, role, phone, is_seller, status, created_at FROM users WHERE id = ?"
+  "SELECT id, name, email, buyer_type, role, phone, is_seller, paypal_email, postal_code, status, created_at FROM users WHERE id = ?"
 );
 
 function isValidEmail(email) {
@@ -21,7 +21,7 @@ function isValidEmail(email) {
 }
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, buyer_type, become_seller, phone } = req.body || {};
+  const { name, email, password, buyer_type, become_seller, phone, paypal_email, postal_code } = req.body || {};
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: "Name, email, and password are required." });
@@ -34,8 +34,16 @@ router.post("/register", async (req, res) => {
   }
   const normalizedBuyerType = ["local", "trade", "overseas"].includes(buyer_type) ? buyer_type : "local";
   const wantsSeller = become_seller === true || become_seller === "true" || become_seller === "on";
-  if (wantsSeller && !String(phone || "").trim()) {
-    return res.status(400).json({ error: "A contact phone number is required to register as a Parts Seller." });
+  if (wantsSeller) {
+    if (!String(phone || "").trim()) {
+      return res.status(400).json({ error: "A contact phone number is required to register as a Parts Seller." });
+    }
+    if (!isValidEmail(paypal_email)) {
+      return res.status(400).json({ error: "A valid PayPal email is required to register as a Parts Seller — that's where you'll be paid out." });
+    }
+    if (!String(postal_code || "").trim()) {
+      return res.status(400).json({ error: "A postal code is required to register as a Parts Seller — it's used to work out local (50km) shipping for your listings." });
+    }
   }
 
   const existing = findByEmail.get(email.toLowerCase().trim());
@@ -53,6 +61,8 @@ router.post("/register", async (req, res) => {
       buyer_type: normalizedBuyerType,
       phone: phone ? String(phone).trim() : null,
       is_seller: wantsSeller ? 1 : 0,
+      paypal_email: wantsSeller ? String(paypal_email).trim().toLowerCase() : null,
+      postal_code: wantsSeller ? String(postal_code).trim() : null,
     });
     // New accounts start 'pending' (see insertUser above) and are NOT
     // logged in here — an admin has to approve the account (Admin panel
@@ -69,15 +79,25 @@ router.post("/register", async (req, res) => {
 // Lets an already-registered member register as a Parts Seller later,
 // from /account.html, without creating a second account. Requires a
 // contact phone number (used as the default contact on new listings —
-// each listing can still override it).
+// each listing can still override it), a PayPal email (where checkout
+// payouts are sent — see server/routes/orders.js), and a postal code
+// (the shipping-distance origin for the 50km eligibility check).
 router.post("/become-seller", (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: "Please log in first." });
-  const { phone } = req.body || {};
+  const { phone, paypal_email, postal_code } = req.body || {};
   if (!String(phone || "").trim()) {
     return res.status(400).json({ error: "A contact phone number is required to register as a Parts Seller." });
   }
-  db.prepare("UPDATE users SET is_seller = 1, phone = ? WHERE id = ?").run(
+  if (!isValidEmail(paypal_email)) {
+    return res.status(400).json({ error: "A valid PayPal email is required — that's where you'll be paid out for sales." });
+  }
+  if (!String(postal_code || "").trim()) {
+    return res.status(400).json({ error: "A postal code is required — it's used to work out local (50km) shipping for your listings." });
+  }
+  db.prepare("UPDATE users SET is_seller = 1, phone = ?, paypal_email = ?, postal_code = ? WHERE id = ?").run(
     String(phone).trim(),
+    String(paypal_email).trim().toLowerCase(),
+    String(postal_code).trim(),
     req.session.userId
   );
   res.json({ user: findById.get(req.session.userId) });
