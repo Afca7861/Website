@@ -29,7 +29,11 @@ async function guardSellPartsPage() {
   qs("#sp-dashboard").hidden = false;
   qs("#sp-contact-phone").value = user.phone || "";
   qs("#sp-contact-email").value = user.email || "";
+  qs("#sp-payout-phone").value = user.phone || "";
+  qs("#sp-payout-paypal").value = user.paypal_email || "";
+  qs("#sp-payout-postal").value = user.postal_code || "";
   loadMyParts();
+  loadMySales();
 }
 
 function wireOnboarding() {
@@ -42,13 +46,74 @@ function wireOnboarding() {
     try {
       await apiFetch("/api/auth/become-seller", {
         method: "POST",
-        body: JSON.stringify({ phone: form.phone.value }),
+        body: JSON.stringify({
+          phone: form.phone.value,
+          paypal_email: form.paypal_email.value,
+          postal_code: form.postal_code.value,
+        }),
       });
       window.location.reload();
     } catch (err) {
       msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
     }
   });
+}
+
+function wirePayoutForm() {
+  const form = qs("#sp-payout-form");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = qs("#sp-payout-message");
+    msg.innerHTML = "";
+    try {
+      await apiFetch("/api/seller/payout-info", {
+        method: "PUT",
+        body: JSON.stringify({
+          phone: form.phone.value,
+          paypal_email: form.paypal_email.value,
+          postal_code: form.postal_code.value,
+        }),
+      });
+      msg.innerHTML = `<div class="form-success">Payout settings saved.</div>`;
+    } catch (err) {
+      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+    }
+  });
+}
+
+const SALE_STATUS_LABELS = {
+  pending: "Awaiting payment",
+  paid: "Paid out",
+  payout_failed: "Sold — payout pending (contact AFCA)",
+};
+
+async function loadMySales() {
+  const wrap = qs("#sp-orders-wrap");
+  try {
+    const { orders } = await apiFetch("/api/seller/orders");
+    if (!orders.length) {
+      wrap.innerHTML = `<p class="muted">Nothing sold yet.</p>`;
+      return;
+    }
+    const rows = orders
+      .map(
+        (o) => `<tr>
+          <td>${escapeHtml(o.part_title)}</td>
+          <td>${money(o.part_price)}</td>
+          <td>${o.fulfillment_method === "shipping" ? "Shipped" : "Pickup"}</td>
+          <td>${money(o.seller_payout)}</td>
+          <td><span class="badge ${o.status === "paid" ? "badge-green" : o.status === "payout_failed" ? "badge-red" : "badge-gray"}">${escapeHtml(SALE_STATUS_LABELS[o.status] || o.status)}</span></td>
+          <td>${escapeHtml((o.created_at || "").slice(0, 10))}</td>
+        </tr>`
+      )
+      .join("");
+    wrap.innerHTML = `<table class="admin-table"><thead><tr>
+      <th>Part</th><th>Price</th><th>Fulfillment</th><th>Your payout</th><th>Status</th><th>Date</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (err) {
+    wrap.innerHTML = `<p class="form-error">Couldn't load your sales: ${escapeHtml(err.message)}</p>`;
+  }
 }
 
 async function loadMyParts() {
@@ -260,5 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!qs("#sell-parts-app")) return;
   wireOnboarding();
   wireDashboard();
+  wirePayoutForm();
   guardSellPartsPage();
 });

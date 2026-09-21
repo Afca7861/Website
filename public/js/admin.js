@@ -78,6 +78,7 @@ async function guardAdmin() {
     Object.keys(SECTIONS).forEach(loadSection);
     loadBannerSettings();
     loadCustomers();
+    loadOrders();
   } catch (e) {
     qs("#admin-guard").innerHTML =
       `<div class="form-error">You need an admin account to view this page. <a href="/admin-login.html">Sign in as admin</a></div>`;
@@ -513,12 +514,100 @@ function wireCustomers() {
   if (exportBtn) exportBtn.addEventListener("click", exportCustomersCSV);
 }
 
+// ---- Orders (Car Parts checkout — see server/routes/orders.js) ----
+
+const ORDER_STATUS_LABELS = { pending: "Awaiting payment", paid: "Paid", payout_failed: "Payout pending" };
+let ordersCache = [];
+
+async function loadOrders() {
+  const target = qs("#table-orders");
+  if (!target) return;
+  try {
+    const { orders } = await apiFetch("/api/admin/orders");
+    ordersCache = orders;
+    renderOrdersTable();
+  } catch (err) {
+    target.innerHTML = `<p class="form-error">Couldn't load orders: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function filteredOrders() {
+  const status = qs("#orders-status-filter")?.value || "";
+  return ordersCache.filter((o) => !status || o.status === status);
+}
+
+function orderStatusBadge(status) {
+  if (status === "paid") return `<span class="badge badge-green">Paid</span>`;
+  if (status === "payout_failed") return `<span class="badge badge-red">Payout pending</span>`;
+  return `<span class="badge badge-gray">Awaiting payment</span>`;
+}
+
+function renderOrdersTable() {
+  const target = qs("#table-orders");
+  if (!target) return;
+  const rows = filteredOrders();
+  const countEl = qs("#orders-count");
+  if (countEl) {
+    const status = qs("#orders-status-filter")?.value || "";
+    const scope = status ? ` (${ORDER_STATUS_LABELS[status]})` : "";
+    countEl.textContent = `${rows.length} order${rows.length === 1 ? "" : "s"}${scope}`;
+  }
+  if (!rows.length) {
+    target.innerHTML = `<p class="muted">No orders match this filter.</p>`;
+    return;
+  }
+  const body = rows
+    .map((o) => {
+      const seller = o.seller_id ? `${escapeHtml(o.seller_name || "—")}<br><span class="muted" style="font-size:12px;">${escapeHtml(o.seller_paypal_email || "no PayPal on file")}</span>` : `<span class="muted">AFCA (admin listing)</span>`;
+      const retryBtn = o.status === "payout_failed"
+        ? `<button type="button" class="btn btn-outline" data-retry-payout="${o.id}">Retry payout</button>`
+        : "";
+      return `<tr>
+        <td>#${o.id}</td>
+        <td>${escapeHtml(o.part_title)}</td>
+        <td>${escapeHtml(o.buyer_name)}<br><span class="muted" style="font-size:12px;">${escapeHtml(o.buyer_email)}</span></td>
+        <td>${seller}</td>
+        <td>${o.fulfillment_method === "shipping" ? "Shipping" : "Pickup"}</td>
+        <td>${money(o.total_amount)}</td>
+        <td>${money(o.platform_fee + o.shipping_fee)}</td>
+        <td>${o.seller_payout > 0 ? money(o.seller_payout) : "—"}</td>
+        <td>${orderStatusBadge(o.status)}</td>
+        <td>${escapeHtml(formatJoinedDate(o.created_at))}</td>
+        <td class="admin-row-actions">${retryBtn}</td>
+      </tr>`;
+    })
+    .join("");
+  target.innerHTML = `<table class="admin-table">
+    <thead><tr><th>#</th><th>Part</th><th>Buyer</th><th>Seller</th><th>Fulfillment</th><th>Total</th><th>AFCA's cut</th><th>Seller payout</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>${body}</tbody>
+  </table>`;
+
+  qsa("[data-retry-payout]", target).forEach((btn) =>
+    btn.addEventListener("click", () => retryPayout(Number(btn.dataset.retryPayout)))
+  );
+}
+
+async function retryPayout(id) {
+  try {
+    await apiFetch(`/api/admin/orders/${id}/retry-payout`, { method: "POST" });
+    await loadOrders();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function wireOrders() {
+  const statusFilter = qs("#orders-status-filter");
+  if (statusFilter) statusFilter.addEventListener("change", renderOrdersTable);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (!qs("#admin-app")) return; // not the admin page
   guardAdmin();
   Object.keys(SECTIONS).forEach(wireSection);
   wireBannerSection();
   wireCustomers();
+  wireOrders();
 
   qsa(".admin-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
