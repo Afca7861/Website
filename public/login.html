@@ -33,7 +33,7 @@
       <a href="/index.html" data-nav="home">Home</a>
       <a href="/cars.html" data-nav="cars">Used Cars</a>
       <a href="/parts.html" data-nav="parts">Car Parts</a>
-      <a href="/sell-parts.html" data-nav="sell-parts">Sell or Buy Parts</a>
+      <a href="/parts.html" data-nav="sell-parts">Sell or Buy Parts</a>
       <a href="/payment-calculator.html" data-nav="payment-calculator">Payment Calculator</a>
       <a href="/export.html" data-nav="export">Ship Cars</a>
       <a href="/auctions.html" data-nav="auctions">Auction Feed</a>
@@ -102,7 +102,12 @@ qs("#login-form").addEventListener("submit", async (e) => {
   const form = e.target;
   try {
     await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email: form.email.value, password: form.password.value }) });
-    window.location.href = "/account.html";
+    // Honor ?next=/some-page so buttons like "Sign in to your Parts
+    // account" land you back where you started, not on the generic
+    // account page. Only ever follow a same-site relative path.
+    const next = new URLSearchParams(window.location.search).get("next");
+    const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/account.html";
+    window.location.href = safeNext;
   } catch (err) {
     msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
   }
