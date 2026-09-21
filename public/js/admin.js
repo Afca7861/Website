@@ -77,6 +77,7 @@ async function guardAdmin() {
     qs("#admin-app").hidden = false;
     Object.keys(SECTIONS).forEach(loadSection);
     loadBannerSettings();
+    loadCustomers();
   } catch (e) {
     qs("#admin-guard").innerHTML =
       `<div class="form-error">You need an admin account to view this page. <a href="/admin-login.html">Sign in as admin</a></div>`;
@@ -357,11 +358,117 @@ function wireBannerSection() {
   });
 }
 
+// ---- Customers (read-only — every registered account, all three buyer
+// categories: Local / Trade / Overseas) ----
+
+const BUYER_TYPE_LABELS = { local: "Local", trade: "Trade", overseas: "Overseas" };
+let customersCache = [];
+
+async function loadCustomers() {
+  const target = qs("#table-customers");
+  if (!target) return;
+  try {
+    const { users } = await apiFetch("/api/admin/users");
+    customersCache = users;
+    renderCustomersTable();
+  } catch (err) {
+    target.innerHTML = `<p class="form-error">Couldn't load customers: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function filteredCustomers() {
+  const category = qs("#customers-filter")?.value || "";
+  return category ? customersCache.filter((u) => u.buyer_type === category) : customersCache;
+}
+
+function formatJoinedDate(iso) {
+  if (!iso) return "—";
+  // SQLite's datetime('now') stores UTC with a space instead of "T" —
+  // append Z so this parses as UTC rather than being reinterpreted in
+  // the visitor's local timezone.
+  const d = new Date(`${iso.replace(" ", "T")}Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function renderCustomersTable() {
+  const target = qs("#table-customers");
+  if (!target) return;
+  const rows = filteredCustomers();
+  const countEl = qs("#customers-count");
+  if (countEl) {
+    const category = qs("#customers-filter")?.value || "";
+    const scope = category ? ` in ${BUYER_TYPE_LABELS[category]}` : "";
+    countEl.textContent = `${rows.length} registered customer${rows.length === 1 ? "" : "s"}${scope}`;
+  }
+  if (!rows.length) {
+    target.innerHTML = `<p class="muted">No registered customers yet.</p>`;
+    return;
+  }
+  const body = rows
+    .map(
+      (u) => `<tr>
+        <td>${escapeHtml(u.name)}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(u.phone || "—")}</td>
+        <td>${escapeHtml(BUYER_TYPE_LABELS[u.buyer_type] || u.buyer_type)}</td>
+        <td>${u.is_seller ? "Yes" : "No"}</td>
+        <td>${escapeHtml(formatJoinedDate(u.created_at))}</td>
+      </tr>`
+    )
+    .join("");
+  target.innerHTML = `<table class="admin-table">
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Category</th><th>Parts Seller</th><th>Joined</th></tr></thead>
+    <tbody>${body}</tbody>
+  </table>`;
+}
+
+function csvField(value) {
+  const str = String(value ?? "");
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function exportCustomersCSV() {
+  const rows = filteredCustomers();
+  const header = ["Name", "Email", "Phone", "Category", "Parts Seller", "Joined"];
+  const lines = [header.join(",")].concat(
+    rows.map((u) =>
+      [
+        u.name,
+        u.email,
+        u.phone || "",
+        BUYER_TYPE_LABELS[u.buyer_type] || u.buyer_type,
+        u.is_seller ? "Yes" : "No",
+        u.created_at || "",
+      ]
+        .map(csvField)
+        .join(",")
+    )
+  );
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `afca-customers-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function wireCustomers() {
+  const filter = qs("#customers-filter");
+  const exportBtn = qs("#customers-export");
+  if (filter) filter.addEventListener("change", renderCustomersTable);
+  if (exportBtn) exportBtn.addEventListener("click", exportCustomersCSV);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (!qs("#admin-app")) return; // not the admin page
   guardAdmin();
   Object.keys(SECTIONS).forEach(wireSection);
   wireBannerSection();
+  wireCustomers();
 
   qsa(".admin-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
