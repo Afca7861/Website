@@ -204,6 +204,13 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
   background-position: center;
   display: flex;
   align-items: center;
+  /* When a slide is active it switches to position:relative (see below),
+     which takes it out of the inset:0 stretch and lets its own content
+     height show through. Slides with shorter copy (Parts/Export) were
+     rendering noticeably shorter than the Local Inventory slide as a
+     result. min-height keeps every slide the same size as the slider
+     shell regardless of how much text it has. */
+  min-height: 460px;
 }
 .hero-slide.active { position: relative; opacity: 1; visibility: visible; }
 .hero-slide::before {
@@ -246,6 +253,7 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
 .hero-dots button.active { background: var(--afca-white); width: 22px; border-radius: 5px; }
 @media (max-width: 700px) {
   .hero-slider { min-height: 380px; }
+  .hero-slide { min-height: 380px; }
   .hero-slide-inner { padding: 56px 0 78px; }
   .hero-slide h1 { font-size: 28px; }
   .hero-nav { width: 36px; height: 36px; font-size: 16px; }
@@ -258,7 +266,7 @@ nav.main-nav a.active::after, nav.main-nav a:hover::after { right: 0; }
   padding: 22px 0;
 }
 .quick-search-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--afca-gray-600); margin-bottom: 12px; }
-.quick-search-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.quick-search-chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .chip {
   display: inline-flex;
   align-items: center;
