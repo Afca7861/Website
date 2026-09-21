@@ -136,6 +136,14 @@ function ensureColumn(table, column, ddl) {
 
 ensureColumn("users", "phone", "phone TEXT");
 ensureColumn("users", "is_seller", "is_seller INTEGER NOT NULL DEFAULT 0");
+// Admin approval gate for new registrations — 'pending' | 'approved'.
+// DEFAULT 'approved' here is deliberate: it only governs the value
+// ALTER TABLE backfills onto rows that already existed before this
+// column did, so every account registered before this feature shipped
+// stays able to log in unchanged. New registrations (see auth.js
+// /register) explicitly insert 'pending' instead of relying on this
+// default, so only accounts created from here on require admin sign-off.
+ensureColumn("users", "status", "status TEXT NOT NULL DEFAULT 'approved'");
 
 // Body type (SUV / Sedan / Hatchback / Wagon / Minivan / Truck) — powers
 // the homepage quick-search chips and the Used Cars filter. Optional: old

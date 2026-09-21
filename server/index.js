@@ -119,7 +119,15 @@ app.use("/api/seller", sellerRoutes);
 // README.md.
 if (process.env.ADMIN_BOOTSTRAP_EMAIL) {
   const bootstrapEmail = process.env.ADMIN_BOOTSTRAP_EMAIL.toLowerCase().trim();
-  const info = db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run(bootstrapEmail);
+  // Also force status = 'approved': without this, an admin who registered
+  // fresh (new accounts default to 'pending' — see auth.js) would be
+  // promoted to role 'admin' here but still blocked from logging in by
+  // the pending-approval check in /login, since nothing else in that flow
+  // ever approves them. Being the bootstrap admin should itself count as
+  // approval.
+  const info = db
+    .prepare("UPDATE users SET role = 'admin', status = 'approved' WHERE email = ?")
+    .run(bootstrapEmail);
   if (info.changes > 0) {
     console.log(`Granted admin role to ${bootstrapEmail} (via ADMIN_BOOTSTRAP_EMAIL).`);
   } else {
