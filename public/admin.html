@@ -58,6 +58,7 @@
       <button type="button" class="admin-tab" data-tab="auctions">Auction Feed</button>
       <button type="button" class="admin-tab" data-tab="banner">Site Banner</button>
       <button type="button" class="admin-tab" data-tab="customers">Customers</button>
+      <button type="button" class="admin-tab" data-tab="orders">Orders</button>
     </div>
 
     <!-- LOCAL CARS -->
@@ -280,6 +281,25 @@
       </div>
       <p class="muted" id="customers-count"></p>
       <div class="admin-table-wrap" id="table-customers"></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="admin-panel" data-panel="orders" hidden>
+      <h2>Car Parts orders</h2>
+      <p class="muted">Every part sold through online checkout. AFCA automatically keeps 5% of the part price plus the full $20 shipping surcharge (when shipping was chosen); the seller's 95% share is paid to their PayPal automatically on capture. A "payout pending" row means the buyer's payment succeeded but the automatic payout to the seller failed — use Retry payout once the issue (e.g. a bad PayPal email) is fixed.</p>
+      <div class="filter-bar" id="orders-toolbar">
+        <div class="field">
+          <label for="orders-status-filter">Status</label>
+          <select id="orders-status-filter">
+            <option value="">All statuses</option>
+            <option value="pending">Awaiting payment</option>
+            <option value="paid">Paid</option>
+            <option value="payout_failed">Payout pending</option>
+          </select>
+        </div>
+      </div>
+      <p class="muted" id="orders-count"></p>
+      <div class="admin-table-wrap" id="table-orders"></div>
     </div>
   </div>
 </section>

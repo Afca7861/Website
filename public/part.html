@@ -137,6 +137,7 @@ async function loadPartDetail() {
           <p class="price" style="font-family:var(--heading-font);font-size:28px;color:var(--afca-red);">${money(part.price)}</p>
           <p class="specs muted">${fits ? "Fits: " + escapeHtml(fits) : "Fit not specified"} · Qty available: ${part.quantity ?? "n/a"}</p>
           <p>${escapeHtml(part.description || "")}</p>
+          ${buyPanelHtml(part)}
           ${contactBlock}
         </div>
       </div>
@@ -152,10 +153,180 @@ async function loadPartDetail() {
         });
       });
     }
+    wireBuyPanel(part);
   } catch (err) {
     target.innerHTML = `<p class="form-error">${escapeHtml(err.message)}</p>`;
   }
 }
+
+// ---- Buy Now checkout ----------------------------------------------
+// Anyone can buy a part without an account (the client's spec was
+// explicit: "People who buy don't have to be registered"). Payment goes
+// through PayPal Checkout; see server/routes/orders.js for the server
+// side of this — 95% of the part price is auto-paid to the seller's own
+// PayPal, 5% plus the flat $20 local-shipping surcharge (when shipping is
+// chosen) stays with AFCA.
+
+let paymentsConfigPromise = null;
+function getPaymentsConfig() {
+  if (!paymentsConfigPromise) paymentsConfigPromise = apiFetch("/api/payments/config");
+  return paymentsConfigPromise;
+}
+
+function buyPanelHtml(part) {
+  if (part.status !== "active" || !(part.quantity > 0) || !(part.price > 0)) return "";
+  return `
+    <div id="buy-panel" style="border:1px solid var(--afca-gray-200);border-radius:8px;padding:14px 16px;margin-top:16px;">
+      <h3 class="mt-0" style="font-size:16px;">Buy this part online</h3>
+      <div id="buy-message"></div>
+      <form id="buy-form" class="stack">
+        <div>
+          <label style="margin-bottom:6px;">Fulfillment</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-bottom:0;">
+              <input type="radio" name="fulfillment_method" value="pickup" checked style="width:auto;"> Pickup at the seller's location (free)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-bottom:0;">
+              <input type="radio" name="fulfillment_method" value="shipping" style="width:auto;"> Ship to me (+$20, within 50km only)
+            </label>
+          </div>
+        </div>
+        <div>
+          <label for="buy-name">Your name</label>
+          <input id="buy-name" name="buyer_name" type="text" required>
+        </div>
+        <div>
+          <label for="buy-email">Your email</label>
+          <input id="buy-email" name="buyer_email" type="email" required>
+        </div>
+        <div>
+          <label for="buy-phone">Your phone (optional)</label>
+          <input id="buy-phone" name="buyer_phone" type="tel">
+        </div>
+        <div id="ship-fields" hidden>
+          <label for="buy-address">Shipping address</label>
+          <input id="buy-address" name="shipping_address" type="text" placeholder="Street, city">
+          <label for="buy-postal" style="margin-top:10px;">Postal code</label>
+          <input id="buy-postal" name="shipping_postal_code" type="text" placeholder="V5X 1A1" maxlength="7">
+          <p class="helptext" id="ship-eligibility"></p>
+        </div>
+        <p id="buy-total" style="font-weight:600;margin-bottom:0;"></p>
+        <button class="btn btn-primary btn-block" type="submit" id="buy-continue">Continue to payment</button>
+      </form>
+      <div id="paypal-button-container" style="margin-top:12px;"></div>
+    </div>
+  `;
+}
+
+function loadPaypalSdk(clientId, currency) {
+  return new Promise((resolve, reject) => {
+    if (window.paypal) return resolve();
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}`;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Couldn't load PayPal — check your connection and try again."));
+    document.body.appendChild(script);
+  });
+}
+
+function wireBuyPanel(part) {
+  const form = qs("#buy-form");
+  if (!form) return; // sold out / no price — no buy panel was rendered
+
+  function updateTotal() {
+    const method = qs('input[name="fulfillment_method"]:checked', form).value;
+    const shipFields = qs("#ship-fields");
+    shipFields.hidden = method !== "shipping";
+    qs("#buy-address").required = method === "shipping";
+    qs("#buy-postal").required = method === "shipping";
+    const shippingFee = method === "shipping" ? 20 : 0;
+    const total = Number(part.price) + shippingFee;
+    qs("#buy-total").textContent =
+      `Total: ${money(total)}` + (shippingFee ? ` (includes $${shippingFee} shipping)` : "");
+  }
+
+  qsa('input[name="fulfillment_method"]', form).forEach((r) => r.addEventListener("change", updateTotal));
+  updateTotal();
+
+  qs("#buy-postal").addEventListener("blur", async () => {
+    const postal = qs("#buy-postal").value.trim();
+    const el = qs("#ship-eligibility");
+    if (!postal) { el.textContent = ""; return; }
+    el.textContent = "Checking distance…";
+    el.style.color = "";
+    try {
+      const result = await apiFetch(`/api/parts/${part.id}/shipping-check?postal_code=${encodeURIComponent(postal)}`);
+      if (result.eligible) {
+        el.textContent = `Within ${result.distanceKm}km of the seller — shipping is available.`;
+        el.style.color = "var(--afca-green)";
+      } else if (result.distanceKm != null) {
+        el.textContent = `About ${result.distanceKm}km from the seller — outside the 50km shipping area. Try pickup instead.`;
+        el.style.color = "var(--afca-red)";
+      } else {
+        el.textContent = "Couldn't check that postal code — double-check it, or choose pickup instead.";
+        el.style.color = "var(--afca-red)";
+      }
+    } catch (err) {
+      el.textContent = "";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = qs("#buy-message");
+    msg.innerHTML = "";
+    const btn = qs("#buy-continue");
+    btn.disabled = true;
+    try {
+      const config = await getPaymentsConfig();
+      if (!config.configured) {
+        throw new Error("Online payments aren't set up on this site yet — please contact AFCA directly about this part.");
+      }
+      const payload = {
+        part_id: part.id,
+        fulfillment_method: form.fulfillment_method.value,
+        buyer_name: form.buyer_name.value,
+        buyer_email: form.buyer_email.value,
+        buyer_phone: form.buyer_phone.value,
+        shipping_address: form.shipping_address ? form.shipping_address.value : "",
+        shipping_postal_code: form.shipping_postal_code ? form.shipping_postal_code.value : "",
+      };
+      const order = await apiFetch("/api/orders", { method: "POST", body: JSON.stringify(payload) });
+      await loadPaypalSdk(config.clientId, config.currency);
+      form.hidden = true;
+      renderPaypalButtons(order);
+    } catch (err) {
+      msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
+      btn.disabled = false;
+    }
+  });
+}
+
+function renderPaypalButtons(order) {
+  const container = qs("#paypal-button-container");
+  container.innerHTML = "";
+  window.paypal
+    .Buttons({
+      createOrder: () => order.paypal_order_id,
+      onApprove: async () => {
+        container.innerHTML = `<p class="muted">Finishing up…</p>`;
+        try {
+          const result = await apiFetch(`/api/orders/${order.order_id}/capture`, { method: "POST" });
+          container.innerHTML =
+            result.status === "payout_failed"
+              ? `<div class="form-success">Payment received — thank you! There was a hiccup sending the seller their payout; AFCA has been notified and will follow up.</div>`
+              : `<div class="form-success">Payment received — thank you! The seller has been notified.</div>`;
+        } catch (err) {
+          container.innerHTML = `<div class="form-error">${escapeHtml(err.message)} If you were charged, please contact AFCA and mention order #${order.order_id}.</div>`;
+        }
+      },
+      onError: () => {
+        container.innerHTML = `<div class="form-error">Something went wrong with PayPal. Please try again, or contact AFCA.</div>`;
+      },
+    })
+    .render(container);
+}
+
 loadPartDetail();
 </script>
 

@@ -107,6 +107,16 @@ async function loadAccount() {
             <label for="seller-phone">Contact phone number</label>
             <input id="seller-phone" name="phone" type="tel" required placeholder="(604) 555-0100">
           </div>
+          <div>
+            <label for="seller-paypal-email">PayPal email (where you'll be paid)</label>
+            <input id="seller-paypal-email" name="paypal_email" type="email" required placeholder="you@paypal-email.com">
+            <p class="helptext">When one of your parts sells, 95% of the price is sent here automatically.</p>
+          </div>
+          <div>
+            <label for="seller-postal-code">Your postal code</label>
+            <input id="seller-postal-code" name="postal_code" type="text" required placeholder="V3T 2T3" maxlength="7">
+            <p class="helptext">Used to work out which buyers are within 50km for local shipping.</p>
+          </div>
           <button class="btn btn-primary" type="submit">Register as a Parts Seller</button>
         </form>
       </div>
@@ -130,7 +140,11 @@ async function loadAccount() {
       try {
         await apiFetch("/api/auth/become-seller", {
           method: "POST",
-          body: JSON.stringify({ phone: becomeSellerForm.phone.value }),
+          body: JSON.stringify({
+            phone: becomeSellerForm.phone.value,
+            paypal_email: becomeSellerForm.paypal_email.value,
+            postal_code: becomeSellerForm.postal_code.value,
+          }),
         });
         window.location.href = "/sell-parts.html";
       } catch (err) {

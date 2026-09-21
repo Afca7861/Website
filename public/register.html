@@ -80,6 +80,12 @@
       <div id="seller-phone-field" hidden style="margin-top:10px;">
         <label for="phone">Contact phone number</label>
         <input id="phone" name="phone" type="tel" placeholder="(604) 555-0100">
+        <label for="paypal_email" style="margin-top:10px;">PayPal email (where you'll be paid)</label>
+        <input id="paypal_email" name="paypal_email" type="email" placeholder="you@paypal-email.com">
+        <p class="helptext" style="margin-top:2px;">When one of your parts sells, 95% of the price is sent here automatically.</p>
+        <label for="postal_code" style="margin-top:10px;">Your postal code</label>
+        <input id="postal_code" name="postal_code" type="text" placeholder="V3T 2T3" maxlength="7">
+        <p class="helptext" style="margin-top:2px;">Used to work out which buyers are within 50km for local shipping.</p>
       </div>
     </div>
     <button class="btn btn-primary btn-block" type="submit">Create account</button>
@@ -124,6 +130,8 @@ qs("#become_seller").addEventListener("change", (e) => {
   const field = qs("#seller-phone-field");
   field.hidden = !e.target.checked;
   qs("#phone").required = e.target.checked;
+  qs("#paypal_email").required = e.target.checked;
+  qs("#postal_code").required = e.target.checked;
 });
 
 qs("#register-form").addEventListener("submit", async (e) => {
@@ -138,6 +146,8 @@ qs("#register-form").addEventListener("submit", async (e) => {
     buyer_type: form.buyer_type.value,
     become_seller: form.become_seller.checked,
     phone: form.phone.value,
+    paypal_email: form.paypal_email.value,
+    postal_code: form.postal_code.value,
   };
   try {
     await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });

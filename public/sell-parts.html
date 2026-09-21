@@ -62,12 +62,50 @@
           <label for="sp-onboard-phone">Contact phone number</label>
           <input id="sp-onboard-phone" name="phone" type="tel" required placeholder="(604) 555-0100">
         </div>
+        <div>
+          <label for="sp-onboard-paypal">PayPal email (where you'll be paid)</label>
+          <input id="sp-onboard-paypal" name="paypal_email" type="email" required placeholder="you@paypal-email.com">
+          <p class="helptext">When one of your parts sells, 95% of the price is sent here automatically.</p>
+        </div>
+        <div>
+          <label for="sp-onboard-postal">Your postal code</label>
+          <input id="sp-onboard-postal" name="postal_code" type="text" required placeholder="V3T 2T3" maxlength="7">
+          <p class="helptext">Used to work out which buyers are within 50km for local shipping.</p>
+        </div>
         <button class="btn btn-primary" type="submit">Register as a Parts Seller</button>
       </form>
     </div>
   </div>
 
   <div id="sp-dashboard" hidden>
+    <div class="admin-panel">
+      <h2>Payout settings</h2>
+      <p class="muted">Where your 95% share goes when a part sells, and the postal code used for the 50km local-shipping check.</p>
+      <div id="sp-payout-message"></div>
+      <form id="sp-payout-form" class="admin-form">
+        <div>
+          <label for="sp-payout-phone">Contact phone number</label>
+          <input id="sp-payout-phone" name="phone" type="tel" required placeholder="(604) 555-0100">
+        </div>
+        <div>
+          <label for="sp-payout-paypal">PayPal email</label>
+          <input id="sp-payout-paypal" name="paypal_email" type="email" required placeholder="you@paypal-email.com">
+        </div>
+        <div>
+          <label for="sp-payout-postal">Postal code</label>
+          <input id="sp-payout-postal" name="postal_code" type="text" required placeholder="V3T 2T3" maxlength="7">
+        </div>
+        <div class="admin-form-actions">
+          <button class="btn btn-primary" type="submit">Save payout settings</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-panel">
+      <h2>My sales</h2>
+      <div id="sp-orders-wrap" class="admin-table-wrap"><p class="muted">Loading…</p></div>
+    </div>
+
     <div class="admin-panel">
       <h2 id="sp-form-heading">List a new part</h2>
       <div id="sp-form-message"></div>
