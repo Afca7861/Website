@@ -296,20 +296,69 @@ router.delete("/auctions/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-// Read-only: every registered account, across all three buyer categories
-// (local / trade / overseas — see the CHECK-free buyer_type column in
-// db.js). Powers the Customers tab in the admin panel. password_hash is
-// never selected — nothing in this route ever exposes it.
+// Every registered account, across all three buyer categories (local /
+// trade / overseas — see the CHECK-free buyer_type column in db.js) and
+// both approval states. Powers the Customers tab in the admin panel.
+// password_hash is never selected — nothing in this route ever exposes it.
 router.get("/users", (req, res) => {
   res.json({
     users: db
       .prepare(
-        `SELECT id, name, email, phone, buyer_type, role, is_seller, created_at
+        `SELECT id, name, email, phone, buyer_type, role, is_seller, status, created_at
          FROM users
          ORDER BY created_at DESC`
       )
       .all(),
   });
+});
+
+// Approves a pending registration — see the 'pending' default new
+// accounts get in auth.js's /register and the status check in /login.
+// A no-op (still 200) if the account is already approved, so a
+// double-click or a stale Customers-tab row can't error out.
+router.post("/users/:id/approve", (req, res) => {
+  const user = db.prepare("SELECT id, status FROM users WHERE id = ?").get(req.params.id);
+  if (!user) return res.status(404).json({ error: "Customer not found." });
+  db.prepare("UPDATE users SET status = 'approved' WHERE id = ?").run(req.params.id);
+  res.json({
+    user: db
+      .prepare(
+        "SELECT id, name, email, phone, buyer_type, role, is_seller, status, created_at FROM users WHERE id = ?"
+      )
+      .get(req.params.id),
+  });
+});
+
+// Removes a registered customer entirely. Blocked for two cases where a
+// hard delete would either lock the admin out or silently orphan real
+// business data: deleting your own logged-in admin account, and deleting
+// someone who has posted Parts Seller listings (parts.seller_id
+// references users.id with no ON DELETE clause, so SQLite's own
+// foreign-key check — enabled in db.js — would refuse this anyway; the
+// explicit check here just turns that into a clear message instead of a
+// raw constraint error).
+router.delete("/users/:id", (req, res) => {
+  const id = Number(req.params.id);
+  if (id === req.session.userId) {
+    return res.status(400).json({ error: "You can't remove the account you're currently logged in as." });
+  }
+  const user = db.prepare("SELECT id FROM users WHERE id = ?").get(id);
+  if (!user) return res.status(404).json({ error: "Customer not found." });
+
+  const listingCount = db.prepare("SELECT COUNT(*) AS n FROM parts WHERE seller_id = ?").get(id).n;
+  if (listingCount > 0) {
+    return res.status(409).json({
+      error: `This customer has ${listingCount} Parts Seller listing${listingCount === 1 ? "" : "s"} — remove or reassign those in the Car Parts tab first.`,
+    });
+  }
+
+  try {
+    db.prepare("DELETE FROM users WHERE id = ?").run(id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Delete customer error:", err);
+    res.status(500).json({ error: "Could not remove this customer. Please try again." });
+  }
 });
 
 module.exports = router;

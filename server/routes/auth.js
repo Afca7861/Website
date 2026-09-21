@@ -8,12 +8,12 @@ const db = require("../db");
 const router = express.Router();
 
 const insertUser = db.prepare(`
-  INSERT INTO users (name, email, password_hash, buyer_type, phone, is_seller)
-  VALUES (@name, @email, @password_hash, @buyer_type, @phone, @is_seller)
+  INSERT INTO users (name, email, password_hash, buyer_type, phone, is_seller, status)
+  VALUES (@name, @email, @password_hash, @buyer_type, @phone, @is_seller, 'pending')
 `);
 const findByEmail = db.prepare("SELECT * FROM users WHERE email = ?");
 const findById = db.prepare(
-  "SELECT id, name, email, buyer_type, role, phone, is_seller, created_at FROM users WHERE id = ?"
+  "SELECT id, name, email, buyer_type, role, phone, is_seller, status, created_at FROM users WHERE id = ?"
 );
 
 function isValidEmail(email) {
@@ -54,9 +54,12 @@ router.post("/register", async (req, res) => {
       phone: phone ? String(phone).trim() : null,
       is_seller: wantsSeller ? 1 : 0,
     });
-    req.session.userId = info.lastInsertRowid;
+    // New accounts start 'pending' (see insertUser above) and are NOT
+    // logged in here — an admin has to approve the account (Admin panel
+    // → Customers → Approve) before its first login succeeds. See the
+    // status check in /login below.
     const user = findById.get(info.lastInsertRowid);
-    res.status(201).json({ user });
+    res.status(201).json({ user, pending: true });
   } catch (err) {
     console.error("Registration error:", err);
     res.status(500).json({ error: "Could not create account. Please try again." });
@@ -94,6 +97,9 @@ router.post("/login", async (req, res) => {
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) {
     return res.status(401).json({ error: "Invalid email or password." });
+  }
+  if (user.status === "pending") {
+    return res.status(403).json({ error: "Your account is still awaiting admin approval. Please check back soon." });
   }
 
   req.session.userId = user.id;
