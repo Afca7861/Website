@@ -204,6 +204,81 @@ kept in sync as a "primary photo" so older code that only knows about
 existing `data/afca.db` automatically on next startup — no manual
 migration step, existing listings are untouched.
 
+## Car Parts checkout & payments (PayPal)
+
+Visitors can now buy a listed part directly on the site — no account
+required to buy — with payment split automatically: **95% of the part
+price goes straight to the seller's own PayPal, 5% plus a flat $20
+local-shipping surcharge (when shipping is chosen) stays with AFCA.**
+
+**How it works, end to end:**
+1. A member becomes a Parts Seller (`/register.html` or `/account.html` →
+   "Become a Parts Seller") and now also provides a **PayPal email**
+   (where their share gets paid) and a **postal code** (used to work out
+   which buyers are within 50km for shipping). Both are required — without
+   them, checkout won't have anywhere to send the payout.
+2. A visitor opens a part's page (`/part.html`) and uses the new "Buy this
+   part online" panel: pickup (free) or ship to me (+$20, only offered
+   within 50km of the seller), their name/email/phone, and — for
+   shipping — an address and postal code.
+3. Payment happens entirely inside PayPal's own Checkout flow (a "PayPal"
+   button plus a "Debit or Credit Card" guest-checkout option PayPal shows
+   automatically) — nothing card-related ever touches AFCA's own server.
+4. The instant payment is captured, AFCA's server automatically fires a
+   PayPal Payouts call sending the seller their 95% — the buyer never
+   waits on that, and never sees it.
+5. Admin's **Orders** tab (`/admin.html`) lists every sale, the AFCA cut,
+   the seller payout, and its status. If a payout ever fails (e.g. a
+   typo'd PayPal email), the order shows **Payout pending** and a **Retry
+   payout** button — the buyer's payment is never affected by a payout
+   hiccup.
+
+**Setup required before this can take real payments** — three environment
+variables (`.env` locally, or your hosting platform's environment variable
+settings, same as `SESSION_SECRET`):
+
+- `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` — from a PayPal Business
+  account's app at [developer.paypal.com](https://developer.paypal.com)
+  (Apps & Credentials). `PAYPAL_CLIENT_ID` is also sent to the browser (the
+  checkout page's PayPal button script needs it) — that's normal and safe,
+  it's meant to be public, the same way a "publishable key" works elsewhere.
+  `PAYPAL_CLIENT_SECRET` never leaves the server.
+- `PAYPAL_MODE` — `sandbox` (the default if unset) or `live`. **Leave this
+  as `sandbox` until you're ready to accept real money** — sandbox uses
+  PayPal's fake-money test environment against the exact same API, so
+  nothing about the checkout flow changes when you flip it to `live`; it's
+  purely a safety switch. Test with a PayPal sandbox buyer account
+  (developer.paypal.com → Sandbox → Accounts) before going live.
+- **You also need Payouts enabled on that PayPal Business account** — this
+  is what actually sends the seller their 95%. It's a checkbox/request in
+  the same developer dashboard; PayPal may ask a few questions before
+  turning it on for a new business account. Until it's on, checkout will
+  still work but every sale will land in the admin Orders tab as "Payout
+  pending" (the buyer's payment still succeeds either way).
+
+Until all three variables are set, the checkout button tells visitors
+"Online payments aren't set up yet" rather than failing partway through.
+
+**Known simplifications, worth knowing about:**
+- The 50km shipping check uses free, no-key-required postal-code lookups
+  (`api.zippopotam.us`) at the postal-code-prefix (FSA) level — a close
+  approximation, not an exact road-distance calculation, and only as
+  reliable as that free service's uptime. Fine for a "does this look
+  local?" gate; swap in Google's Distance Matrix API later (see
+  `server/lib/geo.js`) if you want exact numbers or your own key.
+- A buyer purchases exactly 1 unit per checkout (no quantity picker yet) —
+  listing quantity still decreases by 1 per sale, and the listing flips to
+  "sold" once it hits 0.
+- "Bank account" payouts happen through the seller's own PayPal balance —
+  PayPal Payouts sends money to a PayPal email, not to an arbitrary bank
+  account directly. A seller withdraws to their bank from inside their own
+  PayPal account, same as with any PayPal balance. True direct-to-bank
+  payouts (bypassing PayPal entirely) would need a second processor
+  (Stripe Connect) running alongside this — ask if you want that added.
+- There's no email receipt sent yet — the buyer's confirmation is
+  on-screen only after payment. Ask if you'd like order confirmation
+  emails added.
+
 ## Persistent storage on Render
 
 Once you're on a paid Render plan (persistent disks aren't available on
