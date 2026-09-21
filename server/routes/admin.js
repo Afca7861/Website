@@ -296,4 +296,20 @@ router.delete("/auctions/:id", (req, res) => {
   res.json({ ok: true });
 });
 
+// Read-only: every registered account, across all three buyer categories
+// (local / trade / overseas — see the CHECK-free buyer_type column in
+// db.js). Powers the Customers tab in the admin panel. password_hash is
+// never selected — nothing in this route ever exposes it.
+router.get("/users", (req, res) => {
+  res.json({
+    users: db
+      .prepare(
+        `SELECT id, name, email, phone, buyer_type, role, is_seller, created_at
+         FROM users
+         ORDER BY created_at DESC`
+      )
+      .all(),
+  });
+});
+
 module.exports = router;
