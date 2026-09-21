@@ -119,6 +119,50 @@ CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT
 );
+
+-- One row per part purchase (see server/routes/orders.js). Dollar amounts
+-- are stored in whole-dollar-with-cents REALs (e.g. 119.99), matching the
+-- rest of the app's convention of not scaling to integer cents — PayPal
+-- amounts are formatted as decimal strings anyway, so there's no reason to
+-- introduce a second unit system just for this table.
+--
+-- Money flow per order: the buyer pays total_amount (part price + the
+-- $20 shipping surcharge, when shipping was chosen) into AFCA's own PayPal
+-- account. platform_fee (5% of the part price) plus the full shipping
+-- fee both simply stay there. seller_payout (95% of the part price) is
+-- then sent out via PayPal Payouts to the seller's own paypal_email —
+-- skipped entirely (seller_payout stays 0) for admin-posted parts, which
+-- have no seller_id and where AFCA is effectively the seller already.
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  part_id INTEGER NOT NULL REFERENCES parts(id),
+  seller_id INTEGER REFERENCES users(id), -- copied from parts.seller_id at order time; NULL for admin-posted parts
+  part_title TEXT NOT NULL, -- snapshot, so the order stays readable even if the listing is later edited/removed
+  part_price REAL NOT NULL,
+  fulfillment_method TEXT NOT NULL, -- 'pickup' | 'shipping'
+  shipping_fee REAL NOT NULL DEFAULT 0, -- flat $20 when fulfillment_method = 'shipping', entirely AFCA's per the client's instruction
+  platform_fee REAL NOT NULL DEFAULT 0, -- 5% of part_price, AFCA's cut
+  seller_payout REAL NOT NULL DEFAULT 0, -- 95% of part_price, sent to the seller's PayPal; 0 for admin-posted parts
+  total_amount REAL NOT NULL, -- part_price + shipping_fee — what the buyer is actually charged
+  buyer_name TEXT NOT NULL,
+  buyer_email TEXT NOT NULL,
+  buyer_phone TEXT,
+  shipping_address TEXT, -- NULL for pickup orders
+  shipping_postal_code TEXT, -- NULL for pickup orders
+  distance_km REAL, -- distance used for the 50km shipping-eligibility check; NULL for pickup orders
+  paypal_order_id TEXT, -- PayPal Checkout Orders v2 order id (Create Order)
+  paypal_capture_id TEXT, -- set once the buyer's payment is captured
+  payout_batch_id TEXT, -- PayPal Payouts batch id, set once a seller payout is sent
+  -- 'pending' (PayPal order created, buyer hasn't paid yet) | 'paid' (payment
+  -- captured; seller payout sent successfully, or none was needed) |
+  -- 'payout_failed' (payment captured — the sale is real and final — but the
+  -- automatic payout to the seller's PayPal failed and needs admin attention,
+  -- see POST /api/admin/orders/:id/retry-payout)
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_orders_part_id ON orders(part_id);
+CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
 `);
 
 // ---- Migration safety net --------------------------------------------
@@ -164,4 +208,12 @@ ensureColumn("parts", "status", "status TEXT NOT NULL DEFAULT 'active'");
 // produces the same 'YYYY-MM-DD HH:MM:SS' UTC format as datetime('now'),
 // so this is a safe like-for-like swap, not a behavior change.
 ensureColumn("parts", "updated_at", "updated_at TEXT");
+
+// Parts Seller payout details (see server/routes/orders.js and the
+// "Become a Parts Seller" forms). A seller must have paypal_email on file
+// before checkout will attempt to pay them out for a sale; postal_code is
+// the origin used for the 50km shipping-eligibility distance check.
+ensureColumn("users", "paypal_email", "paypal_email TEXT");
+ensureColumn("users", "postal_code", "postal_code TEXT");
+
 module.exports = db;
