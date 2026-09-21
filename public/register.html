@@ -141,7 +141,11 @@ qs("#register-form").addEventListener("submit", async (e) => {
   };
   try {
     await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
-    window.location.href = "/account.html";
+    // New accounts are pending until an admin approves them (see
+    // server/routes/auth.js) — there's no session yet to send them to
+    // /account.html for, so tell them what to expect instead.
+    form.hidden = true;
+    msg.innerHTML = `<div class="form-success">Thanks for registering! Your account is now awaiting admin approval — once it's approved you'll be able to <a href="/login.html">log in</a>.</div>`;
   } catch (err) {
     msg.innerHTML = `<div class="form-error">${escapeHtml(err.message)}</div>`;
   }

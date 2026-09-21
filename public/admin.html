@@ -255,7 +255,7 @@
     <!-- CUSTOMERS -->
     <div class="admin-panel" data-panel="customers" hidden>
       <h2>Registered customers</h2>
-      <p class="muted">Everyone who has created an account on the site, across all three buyer categories — Local, Trade, and Overseas.</p>
+      <p class="muted">Everyone who has created an account on the site, across all three buyer categories — Local, Trade, and Overseas. New registrations start as <strong>Pending</strong> and can't log in until you approve them here.</p>
       <div class="filter-bar" id="customers-toolbar">
         <div class="field">
           <label for="customers-filter">Category</label>
@@ -264,6 +264,14 @@
             <option value="local">Local</option>
             <option value="trade">Trade</option>
             <option value="overseas">Overseas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="customers-status-filter">Status</label>
+          <select id="customers-status-filter">
+            <option value="">All statuses</option>
+            <option value="pending">Pending approval</option>
+            <option value="approved">Approved</option>
           </select>
         </div>
         <div class="field">
