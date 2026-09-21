@@ -358,10 +358,13 @@ function wireBannerSection() {
   });
 }
 
-// ---- Customers (read-only — every registered account, all three buyer
-// categories: Local / Trade / Overseas) ----
+// ---- Customers (every registered account, all three buyer categories:
+// Local / Trade / Overseas — plus approving pending signups and removing
+// accounts entirely; see the /users, /users/:id/approve, and /users/:id
+// endpoints in server/routes/admin.js) ----
 
 const BUYER_TYPE_LABELS = { local: "Local", trade: "Trade", overseas: "Overseas" };
+const STATUS_LABELS = { pending: "Pending", approved: "Approved" };
 let customersCache = [];
 
 async function loadCustomers() {
@@ -378,7 +381,10 @@ async function loadCustomers() {
 
 function filteredCustomers() {
   const category = qs("#customers-filter")?.value || "";
-  return category ? customersCache.filter((u) => u.buyer_type === category) : customersCache;
+  const status = qs("#customers-status-filter")?.value || "";
+  return customersCache.filter(
+    (u) => (!category || u.buyer_type === category) && (!status || u.status === status)
+  );
 }
 
 function formatJoinedDate(iso) {
@@ -398,29 +404,70 @@ function renderCustomersTable() {
   const countEl = qs("#customers-count");
   if (countEl) {
     const category = qs("#customers-filter")?.value || "";
-    const scope = category ? ` in ${BUYER_TYPE_LABELS[category]}` : "";
+    const status = qs("#customers-status-filter")?.value || "";
+    const bits = [category && BUYER_TYPE_LABELS[category], status && STATUS_LABELS[status]].filter(Boolean);
+    const scope = bits.length ? ` (${bits.join(", ")})` : "";
     countEl.textContent = `${rows.length} registered customer${rows.length === 1 ? "" : "s"}${scope}`;
   }
   if (!rows.length) {
-    target.innerHTML = `<p class="muted">No registered customers yet.</p>`;
+    target.innerHTML = `<p class="muted">No registered customers match this filter.</p>`;
     return;
   }
   const body = rows
-    .map(
-      (u) => `<tr>
+    .map((u) => {
+      const statusBadge = u.status === "pending"
+        ? `<span class="badge badge-gray">Pending</span>`
+        : `<span class="badge badge-green">Approved</span>`;
+      const approveBtn = u.status === "pending"
+        ? `<button type="button" class="btn btn-outline" data-approve="${u.id}">Approve</button>`
+        : "";
+      return `<tr>
         <td>${escapeHtml(u.name)}</td>
         <td>${escapeHtml(u.email)}</td>
         <td>${escapeHtml(u.phone || "—")}</td>
         <td>${escapeHtml(BUYER_TYPE_LABELS[u.buyer_type] || u.buyer_type)}</td>
+        <td>${statusBadge}</td>
         <td>${u.is_seller ? "Yes" : "No"}</td>
         <td>${escapeHtml(formatJoinedDate(u.created_at))}</td>
-      </tr>`
-    )
+        <td class="admin-row-actions">
+          ${approveBtn}
+          <button type="button" class="btn btn-outline" data-remove-customer="${u.id}">Remove</button>
+        </td>
+      </tr>`;
+    })
     .join("");
   target.innerHTML = `<table class="admin-table">
-    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Category</th><th>Parts Seller</th><th>Joined</th></tr></thead>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Category</th><th>Status</th><th>Parts Seller</th><th>Joined</th><th>Actions</th></tr></thead>
     <tbody>${body}</tbody>
   </table>`;
+
+  qsa("[data-approve]", target).forEach((btn) =>
+    btn.addEventListener("click", () => approveCustomer(Number(btn.dataset.approve)))
+  );
+  qsa("[data-remove-customer]", target).forEach((btn) =>
+    btn.addEventListener("click", () => removeCustomer(Number(btn.dataset.removeCustomer)))
+  );
+}
+
+async function approveCustomer(id) {
+  try {
+    await apiFetch(`/api/admin/users/${id}/approve`, { method: "POST" });
+    await loadCustomers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function removeCustomer(id) {
+  const row = customersCache.find((u) => u.id === id);
+  const label = row ? `${row.name} (${row.email})` : "this customer";
+  if (!confirm(`Remove ${label}? This permanently deletes their account and can't be undone.`)) return;
+  try {
+    await apiFetch(`/api/admin/users/${id}`, { method: "DELETE" });
+    await loadCustomers();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function csvField(value) {
@@ -430,7 +477,7 @@ function csvField(value) {
 
 function exportCustomersCSV() {
   const rows = filteredCustomers();
-  const header = ["Name", "Email", "Phone", "Category", "Parts Seller", "Joined"];
+  const header = ["Name", "Email", "Phone", "Category", "Status", "Parts Seller", "Joined"];
   const lines = [header.join(",")].concat(
     rows.map((u) =>
       [
@@ -438,6 +485,7 @@ function exportCustomersCSV() {
         u.email,
         u.phone || "",
         BUYER_TYPE_LABELS[u.buyer_type] || u.buyer_type,
+        STATUS_LABELS[u.status] || u.status,
         u.is_seller ? "Yes" : "No",
         u.created_at || "",
       ]
@@ -458,8 +506,10 @@ function exportCustomersCSV() {
 
 function wireCustomers() {
   const filter = qs("#customers-filter");
+  const statusFilter = qs("#customers-status-filter");
   const exportBtn = qs("#customers-export");
   if (filter) filter.addEventListener("change", renderCustomersTable);
+  if (statusFilter) statusFilter.addEventListener("change", renderCustomersTable);
   if (exportBtn) exportBtn.addEventListener("click", exportCustomersCSV);
 }
 
