@@ -74,6 +74,24 @@ function wirePartsSearch(formSelector, gridSelector) {
   });
 }
 
+// If the visitor is already logged in, point the "Sign in to your Parts
+// account" button straight at the seller portal instead of the login page
+// — sell-parts.html itself handles onboarding vs. dashboard from there.
+async function wirePartsAccountButton() {
+  const btn = qs("#parts-account-btn");
+  if (!btn) return;
+  try {
+    const { user } = await apiFetch("/api/auth/me");
+    if (user) {
+      btn.href = "/sell-parts.html";
+      btn.textContent = user.is_seller ? "Go to your Parts account" : "Manage your Parts account";
+    }
+  } catch (e) {
+    // Not logged in (or the check failed) — leave the sign-in link as-is.
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   wirePartsSearch("#parts-search-form", "#parts-grid");
+  wirePartsAccountButton();
 });
