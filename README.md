@@ -11,8 +11,9 @@ of business the client described:
    Eastern Europe, Africa, and the Middle East.
 
 The landing page follows the client's brief exactly: a sliding local-inventory
-carousel with text-over-image pricing (Section A), and a daily auction feed
-(Section B) whose **direct auction links are only sent to logged-in,
+carousel with text-over-image pricing (Section A), and an auction feed
+(Section B, auto-refreshed every Tuesday/Thursday/Sunday) whose **direct
+auction links are only sent to logged-in,
 registered accounts** — the server never sends the link to a logged-out
 browser at all, so it can't be recovered from page source or dev tools.
 
@@ -117,8 +118,9 @@ extra step, and thank you for bearing with the sandbox's limitation.
 
 There's now a real admin UI at **`/admin.html`** (sign in at
 **`/admin-login.html`**) for posting and editing listings in all four
-sections — local cars, export/salvage cars, parts, and the daily auction
-feed — including uploading a photo for each one. It also has a **Site
+sections — local cars, export/salvage cars, parts, and the auction feed
+(see "Automated auction feed sync" below for how that one also refreshes
+itself Tue/Thu/Sun) — including uploading a photo for each one. It also has a **Site
 Banner** tab for changing the homepage banner's photo, headline, and
 subtext without touching any code — upload a photo there and it replaces
 the default placeholder graphic on the homepage immediately. No coding or
@@ -152,6 +154,43 @@ before relying on this for real inventory, upgrade to a plan with a
 persistent disk and follow "Persistent storage on Render" below (or move
 photo storage to something like Cloudinary/S3 instead — ask me and I can
 wire that in).
+
+## Automated auction feed sync
+
+The auction feed (`/auctions.html`) now refreshes itself automatically
+**every Tuesday, Thursday, and Sunday** — an automation researches IAAI
+Canada's public BC and Alberta regional auctions, picks the top 9
+upcoming Toyota and Honda listings (soonest-closing first; if fewer than
+9 turn up, it fills the rest with randomly-selected Hybrid/EV listings
+from the same region), and posts the results to the site. You can still
+add, edit, or delete individual listings by hand at any time in
+`/admin.html` → **Auctions** — the automation simply overwrites the whole
+list again on its next scheduled run.
+
+**How it authenticates:** the automation has no login and no admin
+session — it's an unattended process with nobody there to type a
+password. Instead it posts to a single narrow endpoint,
+`POST /api/auctions/sync`, using a long random shared secret
+(`AUCTION_FEED_SYNC_TOKEN`) sent in an `X-Sync-Token` header. That token
+can only ever replace the rows in the auction feed — unlike the real
+admin login, it can't edit any other listing, approve or remove
+customers, touch orders, or reach anything else in the admin panel. If
+it ever leaked, the worst case is someone posting junk auction listings
+(easy to spot and fix), not a compromised admin account.
+
+**Setup required:**
+- `AUCTION_FEED_SYNC_TOKEN` — a long random string, same idea as
+  `MAINTENANCE_BYPASS_TOKEN` above (generate one with
+  `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
+  Set it in your hosting platform's environment variable settings (same
+  place as `SESSION_SECRET`). Until this is set, `POST /api/auctions/sync`
+  refuses every request with a 503 rather than silently accepting an
+  unauthenticated one.
+
+Nothing about the public feed's privacy contract changes: `auction_url`
+is still only ever sent to logged-in, approved customer accounts (see
+`server/routes/auctions.js`) — the sync endpoint only ever writes rows,
+it never reads or returns the link.
 
 ## Community Parts Seller portal
 
