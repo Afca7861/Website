@@ -13,6 +13,7 @@ const { dataDir, uploadsDir } = require("./paths");
 const authRoutes = require("./routes/auth");
 const listingsRoutes = require("./routes/listings");
 const auctionsRoutes = require("./routes/auctions");
+const auctionSyncRoutes = require("./routes/auction-sync");
 const adminRoutes = require("./routes/admin");
 const sellerRoutes = require("./routes/seller");
 const ordersRoutes = require("./routes/orders");
@@ -111,6 +112,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api", listingsRoutes);
 app.use("/api", auctionsRoutes);
+app.use("/api", auctionSyncRoutes); // POST /api/auctions/sync — token-gated, not session-gated (see auction-sync.js)
 app.use("/api/admin", adminRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api", ordersRoutes); // checkout: POST /orders, POST /orders/:id/capture, GET /parts/:id/shipping-check, GET /payments/config
