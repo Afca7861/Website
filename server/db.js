@@ -195,6 +195,15 @@ ensureColumn("users", "status", "status TEXT NOT NULL DEFAULT 'approved'");
 // body-type filter, same as any other optional field on this table.
 ensureColumn("vehicles", "body_type", "body_type TEXT");
 
+// 'available' | 'sold' — the Status field on the Local Cars admin form
+// (admin.html). A sold vehicle still shows up everywhere it normally
+// would (cars.html, the homepage carousel, its own vehicle.html page) —
+// it just gets a "Sold" ribbon over its photo (see .sold-ribbon in
+// style.css) rather than being hidden, so a visitor can still see what
+// AFCA has recently sold. DEFAULT 'available' backfills every
+// already-existing row as unsold, which is correct for all of them.
+ensureColumn("vehicles", "status", "status TEXT NOT NULL DEFAULT 'available'");
+
 ensureColumn("parts", "year_compat", "year_compat INTEGER");
 ensureColumn("parts", "fuel_type", "fuel_type TEXT");
 ensureColumn("parts", "seller_id", "seller_id INTEGER REFERENCES users(id)");
