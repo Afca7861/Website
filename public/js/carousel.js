@@ -27,6 +27,7 @@ async function loadHeroCarousel(targetSelector) {
             (v) => `
           <div class="hero-car-card">
             <a class="hero-car-media" href="/vehicle.html?id=${v.id}">
+              ${v.status === "sold" ? `<span class="sold-ribbon">Sold</span>` : ""}
               <img src="${escapeHtml(v.image_url || "/assets/placeholder-car.svg")}" alt="${escapeHtml(v.title)}">
             </a>
             <div class="hero-car-body">

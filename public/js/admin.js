@@ -9,7 +9,7 @@ const SECTIONS = {
     key: "vehicles",
     filter: (row) => row.category === "local",
     fixed: { category: "local" },
-    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description"],
+    fields: ["title", "price", "year", "make", "model", "mileage", "condition_note", "body_type", "tags", "description", "status"],
     numeric: ["price", "year", "mileage"],
     multiImage: true,
     maxPhotos: 12,
@@ -17,6 +17,7 @@ const SECTIONS = {
       { key: "title", label: "Title" },
       { key: "price", label: "Price", fmt: money },
       { key: "year", label: "Year" },
+      { key: "status", label: "Status", fmt: (v) => (v === "sold" ? "Sold" : "Available") },
     ],
   },
   export: {

@@ -7,8 +7,10 @@ function vehicleCard(v, opts) {
     ? `<span class="badge badge-red">${escapeHtml(v.condition_note || "Salvage")}</span>`
     : `<span class="badge badge-green">${escapeHtml(v.condition_note || "Inspected")}</span>`;
   const bodyTypeBadge = v.body_type ? `<span class="badge badge-gray">${escapeHtml(v.body_type)}</span>` : "";
+  const soldRibbon = v.status === "sold" ? `<span class="sold-ribbon">Sold</span>` : "";
   return `
     <a class="card" href="/vehicle.html?id=${v.id}" style="color:inherit;">
+      ${soldRibbon}
       <img src="${escapeHtml(v.image_url || "/assets/placeholder-car.svg")}" alt="${escapeHtml(v.title)}">
       <div class="card-body">
         ${badge}${bodyTypeBadge}
