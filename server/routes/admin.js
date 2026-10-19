@@ -142,8 +142,9 @@ function withDefaults(data, fields, existing) {
 
 const vehicleFields = [
   "category", "title", "price", "year", "make", "model",
-  "mileage", "condition_note", "body_type", "description", "image_url", "tags",
+  "mileage", "condition_note", "body_type", "description", "image_url", "tags", "status",
 ];
+const VEHICLE_STATUSES = ["available", "sold"];
 
 // ---- Vehicle photos (multiple per listing) --------------------------
 // Mirrors partWithImages/replaceImages in server/routes/seller.js:
@@ -185,9 +186,14 @@ router.post("/vehicles", (req, res) => {
   if (!data.title || !["local", "export"].includes(data.category)) {
     return res.status(400).json({ error: "Title and a valid category ('local' or 'export') are required." });
   }
+  // Only the Local Cars admin form sends a status field (Export/Salvage
+  // doesn't expose the Sold toggle) — withDefaults would otherwise leave
+  // this null for every export listing and reject the insert, since the
+  // column is NOT NULL.
+  if (!VEHICLE_STATUSES.includes(data.status)) data.status = "available";
   const info = db.prepare(`
-    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, body_type, description, image_url, tags)
-    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @body_type, @description, @image_url, @tags)
+    INSERT INTO vehicles (category, title, price, year, make, model, mileage, condition_note, body_type, description, image_url, tags, status)
+    VALUES (@category, @title, @price, @year, @make, @model, @mileage, @condition_note, @body_type, @description, @image_url, @tags, @status)
   `).run(data);
   if (Array.isArray(req.body.images)) replaceVehicleImages(info.lastInsertRowid, req.body.images);
   res.status(201).json({ vehicle: vehicleWithImages(info.lastInsertRowid) });
@@ -197,9 +203,10 @@ router.put("/vehicles/:id", (req, res) => {
   const existing = db.prepare("SELECT * FROM vehicles WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Vehicle not found." });
   const data = withDefaults(pick(req.body, vehicleFields), vehicleFields, existing);
+  if (!VEHICLE_STATUSES.includes(data.status)) data.status = "available";
   db.prepare(`
     UPDATE vehicles SET category=@category, title=@title, price=@price, year=@year, make=@make, model=@model,
-      mileage=@mileage, condition_note=@condition_note, body_type=@body_type, description=@description, image_url=@image_url, tags=@tags
+      mileage=@mileage, condition_note=@condition_note, body_type=@body_type, description=@description, image_url=@image_url, tags=@tags, status=@status
     WHERE id=@id
   `).run({ ...data, id: req.params.id });
   if (Array.isArray(req.body.images)) replaceVehicleImages(req.params.id, req.body.images);
