@@ -90,9 +90,10 @@
 // through every photo the admin uploaded for it — while the homepage and
 // inventory grids (loadVehicleGrid in public/js/listings.js) keep showing
 // just the one primary photo per listing.
-function vehicleGallery(images, title) {
+function vehicleGallery(images, title, status) {
   const list = images && images.length ? images : ["/assets/placeholder-car.svg"];
-  const main = `<img id="vehicle-main-photo" src="${escapeHtml(list[0])}" alt="${escapeHtml(title)}" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover;">`;
+  const soldRibbon = status === "sold" ? `<span class="sold-ribbon">Sold</span>` : "";
+  const main = `<div class="vehicle-photo-wrap">${soldRibbon}<img id="vehicle-main-photo" src="${escapeHtml(list[0])}" alt="${escapeHtml(title)}" style="width:100%;border-radius:10px;aspect-ratio:4/3;object-fit:cover;"></div>`;
   if (list.length <= 1) return main;
   const thumbs = list
     .map(
@@ -115,7 +116,7 @@ async function loadVehicleDetail() {
     document.title = vehicle.title + " | AFCA Auto Sales Ltd.";
     target.innerHTML = `
       <div class="detail-grid">
-        <div>${vehicleGallery(vehicle.images, vehicle.title)}</div>
+        <div>${vehicleGallery(vehicle.images, vehicle.title, vehicle.status)}</div>
         <div>
           <h1>${escapeHtml(vehicle.title)}</h1>
           <p class="price" style="font-family:var(--heading-font);font-size:28px;color:var(--afca-red);">${money(vehicle.price)}</p>
